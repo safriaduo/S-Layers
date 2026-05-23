@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: ""
+last_updated: "2026-05-23"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -106,7 +106,41 @@ items: []
 #   output_range[min, max], added
 # Optional: expression (the actual formula), notes
 
-formulas: []
+formulas:
+  - name: P_angel
+    status: active
+    source: design/gdd/dice-economy.md
+    referenced_by:
+      - design/gdd/dice-economy.md
+      # design/gdd/angel-system.md — add when authored; must use this table for face assignments
+    variables:
+      - k  # Angel face value, int {1,2,3,4,5,6}
+      - F  # CDF: F(k) = 3*(k/6)^2 - 2*(k/6)^3
+    output_range: [0.074, 0.241]
+    expression: "F(k) - F(k-1)  where  F(k) = 3*(k/6)^2 - 2*(k/6)^3"
+    notes: "Probability that the Angel's 3D6 middle-die shows face k. Peak at faces
+      3 and 4 (~24.1% each), minimum at faces 1 and 6 (~7.4% each). Angel board
+      face assignments must be calibrated against this distribution."
+    added: 2026-05-23
+    revised: ""
+
+  - name: T_accum
+    status: active
+    source: design/gdd/dice-economy.md
+    referenced_by:
+      - design/gdd/dice-economy.md
+      # design/gdd/equipment-system.md — add when authored; use to calibrate Accumulate thresholds
+    variables:
+      - X  # Accumulate threshold, int [4,20]
+      - p  # feeding probability, float (0.0,1.0]; ~0.65 at honest play
+      - E_N  # expected value of placed die = 3.5 (locked, fair d6)
+    output_range: ["X/6", "infinity"]
+    expression: "X / (p * E[N])  where  E[N] = 3.5"
+    notes: "Expected turns to trigger an Accumulate effect. At honest competitive
+      play p ≈ 0.65, giving effective input ~2.75/turn. Use with Accumulate threshold
+      design tiers (Tick 5-6, Charge 8-12, Ritual 15-18) to calibrate card power."
+    added: 2026-05-23
+    revised: ""
 
 # Example:
 #
@@ -139,7 +173,62 @@ formulas: []
 #
 # Required fields: name, status, source, referenced_by, value, unit, added
 
-constants: []
+constants:
+  - name: E_angel
+    status: active
+    source: design/gdd/dice-economy.md
+    referenced_by:
+      - design/gdd/dice-economy.md
+      # design/gdd/angel-system.md — add when authored
+    value: 3.5
+    unit: die-face-average
+    notes: "Expected value of the Angel's 3D6 middle-die result. Used in T_accum
+      and any Angel-side damage/effect calculations."
+    added: 2026-05-23
+    revised: ""
+
+  - name: E_N_max
+    status: active
+    source: design/gdd/dice-economy.md
+    referenced_by:
+      - design/gdd/dice-economy.md
+      # design/gdd/equipment-system.md — add when authored; calibrate slot effect power against 4.47
+      # design/gdd/combat-system.md — add when authored; calibrate expected damage output
+    value: 4.47
+    unit: die-face-average
+    notes: "Expected placed-die value when the player applies max-selection strategy
+      (places the higher of their 2D6). +27.7% above the random baseline of 3.5.
+      Use as the calibration reference for effect output on damage/heal slots that
+      reward high rolls."
+    added: 2026-05-23
+    revised: ""
+
+  - name: accumulate_floor
+    status: active
+    source: design/gdd/dice-economy.md
+    referenced_by:
+      - design/gdd/dice-economy.md
+      # design/gdd/equipment-system.md — add when authored; no Accumulate card may use threshold below this
+    value: 4
+    unit: accumulate-total
+    notes: "Hard minimum Accumulate threshold. Below 4, the effect fires nearly
+      every turn; redesign as an immediate effect instead."
+    added: 2026-05-23
+    revised: ""
+
+  - name: accumulate_ceiling
+    status: active
+    source: design/gdd/dice-economy.md
+    referenced_by:
+      - design/gdd/dice-economy.md
+      # design/gdd/equipment-system.md — add when authored; no Accumulate card may use threshold above this
+    value: 20
+    unit: accumulate-total
+    notes: "Hard maximum Accumulate threshold. Above 20, the threshold is unreachable
+      at honest feeding rates (~65% consistency, E[N/turn] ≈ 2.75). Use even numbers
+      only in physical play to reduce token-tracking friction."
+    added: 2026-05-23
+    revised: ""
 
 # Example:
 #
