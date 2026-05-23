@@ -259,19 +259,17 @@ These tiers are design constraints for all Accumulate cards across the game. All
 
 - **If a player places a die on a slot and then changes their mind before all placements are complete**: rules for physical commitment are a table protocol matter owned by the Communication Protocol GDD. The Dice Economy rule is: effects do not fire until all players have placed all dice, regardless of when dice are physically set down.
 
-- **If two players each want to place on the same party-shared slot in the same round**: each player places on their own equipment. If a shared party slot is introduced by another system, the first player to place occupies the slot for that round; subsequent players cannot place on it that round. This rule is owned by whichever system introduces shared slots.
-
 **Angel Roll**
 
 - **If two or three Angel dice share the same face value** (e.g., 2, 2, 5 or 3, 3, 3 or 1, 5, 5): sort all three dice from lowest to highest and take the middle position. No special handling is needed for ties — the sort resolves all cases unambiguously (2, 2, 5 → middle = 2; 1, 5, 5 → middle = 5; 3, 3, 3 → middle = 3).
 
 - **If the Angel's resolved face maps to an action that has been removed or altered on the Angel board**: the Dice Economy produces a valid face integer 1–6. What the Angel System does if that face has no mapped action is the Angel System's responsibility.
 
-- **If the Angel's action causes a player's equipment to lose Integrity, triggering a layer reveal, and the newly revealed layer would activate given the current Angel die face**: the new layer fires immediately as part of Angel resolution, before the next player turn. The Angel die face serves as both the source of the integrity damage and the activation trigger for the new layer.
+- **If the Angel's action causes a player's equipment to lose Integrity, triggering a layer reveal, and the newly revealed layer would activate **: the new layer fires immediately as part of Angel resolution, before the next player turn. The Angel die face serves as both the source of the integrity damage and the activation trigger for the new layer.
 
 **Effect Resolution Phase**
 
-- **If two dice were placed on the same Accumulate slot**: during the Effect Resolution Phase, the player adds each die's N to the running total in their chosen order. If the first addition crosses the threshold, the Accumulate effect fires and the total resets to zero before the second N is added. The second die then adds to the now-zero total normally.
+- **If two dice were placed on the same Accumulate slot**: during the Effect Resolution Phase, the player adds each die's N to the running total in their chosen order. If the first addition crosses the threshold, the Accumulate effect fires and the total resets to zero. The second die does not add to the now-zero total.
 
 - **If the Accumulate threshold is crossed during Effect Resolution and the fired effect adds a new slot**: the new slot is available from the next player turn. No dice from the current placement phase can redirect to it.
 
@@ -323,7 +321,6 @@ These tiers are design constraints for all Accumulate cards across the game. All
 - **N≥2**: Mild gating — 5 of 6 faces qualify (83%)
 - **N≥4**: Balanced — 3 of 6 faces qualify (50%); clear tension with max-selection strategy
 - **N≥5**: Demanding — 2 of 6 faces qualify (33%); effect should be proportionally powerful
-- **N≥6**: Extreme — 1 in 6 faces (17%); treat as Ritual-tier power level
 - **Too restrictive (N≥6 on a weak effect)**: Slot becomes useless; player will always discard rather than waste a valid die
 
 **3. Maximum N Constraint (`[N≤X]`)**
