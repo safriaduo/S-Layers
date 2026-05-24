@@ -107,6 +107,58 @@ items: []
 # Optional: expression (the actual formula), notes
 
 formulas:
+  - name: D_agg
+    status: active
+    source: design/gdd/integrity-system.md
+    referenced_by:
+      - design/gdd/integrity-system.md
+      # design/gdd/angel-system.md — add when authored; use to calibrate Angel layer HP values
+      # design/gdd/character-system.md — add when authored; feeds T_board calculation
+    variables:
+      - n  # party size, int {1,2,3,4}
+      - D_player_base  # expected damage per player per turn, float [7,10]; baseline = 8
+    output_range: [7, 40]
+    expression: "n * D_player_base"
+    notes: "Aggregate expected party damage per turn. Calibration baseline D_player_base = 8
+      (2D6 on damage slots, honest play with basic items). Angel System must use this to
+      validate HP bounds. Character System must use this when verifying T_board."
+    added: 2026-05-24
+    revised: ""
+
+  - name: T_angel
+    status: active
+    source: design/gdd/integrity-system.md
+    referenced_by:
+      - design/gdd/integrity-system.md
+      # design/gdd/angel-system.md — add when authored; T_angel must be 1.0–3.0 per layer
+    variables:
+      - HP_L  # Angel layer HP, int
+      - D_agg  # aggregate party damage per turn (see D_agg formula)
+      - P_strip  # probability D_turn >= HP_L in one turn, float (0,1]
+    output_range: [1.0, "infinity"]
+    expression: "1 / P(D_turn >= HP_L)  [geometric distribution mean]"
+    notes: "Expected turns to strip one Angel layer. Values > 3.0 are degenerate for the
+      5-8 minute encounter target. Use HP_bounds formula to stay in valid range."
+    added: 2026-05-24
+    revised: ""
+
+  - name: T_board
+    status: active
+    source: design/gdd/integrity-system.md
+    referenced_by:
+      - design/gdd/integrity-system.md
+      # design/gdd/character-system.md — add when authored; verify T_board per character
+    variables:
+      - L_total  # total layers across all 3 slots, int [3,∞); defined by Character System
+      - H_pt  # expected hits per player per turn, float [0.5,3.0]; defined by Angel System
+    output_range: [1.0, "infinity"]
+    expression: "L_total / H_pt"
+    notes: "Expected turns until one player board is destroyed. Must be >= encounter
+      length in turns under worst-case routing. Evaluate at both average and worst-case
+      routing when designing characters."
+    added: 2026-05-24
+    revised: ""
+
   - name: P_angel
     status: active
     source: design/gdd/dice-economy.md
@@ -174,6 +226,51 @@ formulas:
 # Required fields: name, status, source, referenced_by, value, unit, added
 
 constants:
+  - name: D_player_base
+    status: active
+    source: design/gdd/integrity-system.md
+    referenced_by:
+      - design/gdd/integrity-system.md
+      # design/gdd/angel-system.md — add when authored; feeds D_agg for HP calibration
+      # design/gdd/character-system.md — add when authored; feeds T_board
+    value: 8
+    unit: damage-per-player-per-turn
+    notes: "Expected damage per player per turn at honest play with basic equipment
+      and items. 2D6 on damage slots: 2 * 3.5 = 7.0 base + ~1 for item contribution.
+      Angel System must use D_agg = n * 8 as the HP calibration baseline.
+      If playtest shows consistent over/underperformance, update this value and
+      re-derive all Angel HP values from the HP bounds formula."
+    added: 2026-05-24
+    revised: ""
+
+  - name: HP_alpha
+    status: active
+    source: design/gdd/integrity-system.md
+    referenced_by:
+      - design/gdd/integrity-system.md
+      # design/gdd/angel-system.md — add when authored; HP_min = ceil(HP_alpha * D_agg)
+    value: 0.6
+    unit: coefficient
+    notes: "Trivial-floor coefficient for Angel layer HP bounds. HP below (HP_alpha *
+      D_agg) strips too reliably to create tension. HP_min = ceil(0.6 * D_agg).
+      At MVP (n=2, D_agg=16): HP_min = 10."
+    added: 2026-05-24
+    revised: ""
+
+  - name: HP_beta
+    status: active
+    source: design/gdd/integrity-system.md
+    referenced_by:
+      - design/gdd/integrity-system.md
+      # design/gdd/angel-system.md — add when authored; HP_max = floor(HP_beta * D_agg)
+    value: 1.2
+    unit: coefficient
+    notes: "Hard-ceiling coefficient for Angel layer HP bounds. HP above (HP_beta *
+      D_agg) may take 3+ turns to strip, exceeding encounter timing target.
+      HP_max = floor(1.2 * D_agg). At MVP (n=2, D_agg=16): HP_max = 19."
+    added: 2026-05-24
+    revised: ""
+
   - name: E_angel
     status: active
     source: design/gdd/dice-economy.md

@@ -22,7 +22,7 @@ S-Layers is a cooperative board game built on five interlocking rule modules: di
 | # | System Name | Category | Priority | Status | Design Doc | Depends On |
 |---|-------------|----------|----------|--------|------------|------------|
 | 1 | Dice Economy | Foundation | MVP | Designed | [design/gdd/dice-economy.md](dice-economy.md) | — |
-| 2 | Integrity System | Foundation | MVP | Not Started | — | — |
+| 2 | Integrity System | Foundation | MVP | Designed | [design/gdd/integrity-system.md](integrity-system.md) | — |
 | 3 | Win/Loss Conditions | Foundation | MVP | Not Started | — | — |
 | 4 | Equipment System | Core | MVP | Not Started | — | Dice Economy |
 | 5 | Angel System | Core | MVP | Not Started | — | Dice Economy, Integrity System |
@@ -172,10 +172,10 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 12 |
-| Design docs started | 1 |
-| Design docs reviewed | 0 (pending /design-review in fresh session) |
+| Design docs started | 2 |
+| Design docs reviewed | 0 (pending /design-review in fresh sessions) |
 | Design docs approved | 0 (pending) |
-| MVP systems designed | 1 / 9 |
+| MVP systems designed | 2 / 9 |
 | Vertical Slice systems designed | 0 / 1 |
 | Alpha systems designed | 0 / 2 |
 

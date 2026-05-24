@@ -4,7 +4,7 @@
 **Stage**: Concept
 
 ## Current Task
-Dice Economy GDD complete — CD-GDD-ALIGN: APPROVE. Pending: /design-review in fresh session.
+Integrity System GDD complete — CD-GDD-ALIGN: CONCERNS (accepted) 2026-05-24. Pending: /design-review in fresh session.
 
 ## Progress
 - [x] /start — project initialized, stage set to Concept, review mode set to full
@@ -30,12 +30,13 @@ Dice Economy GDD complete — CD-GDD-ALIGN: APPROVE. Pending: /design-review in 
 - production/stage.txt — "Concept"
 - production/review-mode.txt — "full"
 - design/gdd/game-concept.md — complete game concept document
-- design/gdd/dice-economy.md — skeleton created, in design
+- design/gdd/dice-economy.md — complete GDD (CD-GDD-ALIGN: APPROVE)
+- design/gdd/integrity-system.md — COMPLETE (2026-05-24) — all 8 sections ✓, CD-GDD-ALIGN: CONCERNS (accepted)
 
 ## Next Steps
-1. Run `/design-review design/gdd/dice-economy.md` in a FRESH session (mandatory before next system)
-2. Design Integrity System — `/design-system integrity-system` (no dependencies, can start now)
-3. Design Win/Loss Conditions — `/design-system win-loss-conditions` (can be parallel with #2)
+1. Run `/design-review design/gdd/dice-economy.md` in a FRESH session (mandatory)
+2. Run `/design-review design/gdd/integrity-system.md` in a FRESH session (mandatory before next system)
+3. Design Win/Loss Conditions — `/design-system win-loss-conditions` (no dependencies, can start now)
 4. Build MVP physical prototype (months 1-3)
 5. Begin audience building in parallel (month 1+)
 6. Search for woodcut illustrator (month 2)
