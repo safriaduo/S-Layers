@@ -23,7 +23,7 @@ S-Layers is a cooperative board game built on five interlocking rule modules: di
 |---|-------------|----------|----------|--------|------------|------------|
 | 1 | Dice Economy | Foundation | MVP | Designed | [design/gdd/dice-economy.md](dice-economy.md) | — |
 | 2 | Integrity System | Foundation | MVP | Designed | [design/gdd/integrity-system.md](integrity-system.md) | — |
-| 3 | Win/Loss Conditions | Foundation | MVP | Not Started | — | — |
+| 3 | Win/Loss Conditions | Foundation | MVP | Designed | [design/gdd/win-loss-conditions.md](win-loss-conditions.md) | — |
 | 4 | Equipment System | Core | MVP | Not Started | — | Dice Economy |
 | 5 | Angel System | Core | MVP | Not Started | — | Dice Economy, Integrity System |
 | 6 | Character System | Core | MVP | Not Started | — | Equipment System, Dice Economy |
@@ -172,10 +172,10 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 12 |
-| Design docs started | 2 |
+| Design docs started | 3 |
 | Design docs reviewed | 0 (pending /design-review in fresh sessions) |
 | Design docs approved | 0 (pending) |
-| MVP systems designed | 2 / 9 |
+| MVP systems designed | 3 / 9 |
 | Vertical Slice systems designed | 0 / 1 |
 | Alpha systems designed | 0 / 2 |
 
@@ -186,5 +186,7 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 - [x] Build Monte Carlo dice simulation before writing Dice Economy GDD (validated; distribution confirmed)
 - [x] Design Dice Economy (complete — CD-GDD-ALIGN: APPROVE 2026-05-23)
 - [ ] Run `/design-review design/gdd/dice-economy.md` in a FRESH session (not the same session as /design-system)
-- [ ] Design Integrity System, Win/Loss Conditions (can be done in parallel — no dependencies)
+- [x] Design Integrity System (complete — CD-GDD-ALIGN: CONCERNS accepted 2026-05-24)
+- [x] Design Win/Loss Conditions (complete — CD-GDD-ALIGN: APPROVE 2026-05-24)
+- [ ] Run `/design-review design/gdd/win-loss-conditions.md` in a FRESH session
 - [ ] Run `/gate-check systems-design` when all MVP GDDs are complete
