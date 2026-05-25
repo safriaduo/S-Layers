@@ -29,7 +29,7 @@ S-Layers is a cooperative board game built on five interlocking rule modules: di
 | 6 | Character System | Core | MVP | Designed | [design/gdd/character-system.md](character-system.md) | Equipment System, Dice Economy |
 | 7 | Equipment Degradation | Core | MVP | Designed | [design/gdd/equipment-degradation.md](equipment-degradation.md) | Equipment System, Integrity System |
 | 8 | Combat System | Feature | MVP | Not Started | — | Dice Economy, Integrity System, Equipment System, Equipment Degradation, Character System, Angel System |
-| 9 | Item System | Feature | MVP | Not Started | — | Equipment System, Equipment Degradation |
+| 9 | Item System | Feature | MVP | Designed | [design/gdd/item-system.md](item-system.md) | Equipment System, Equipment Degradation |
 | 10 | Events System | Feature | Vertical Slice | Not Started | — | Combat System, Item System, Win/Loss Conditions |
 | 11 | Game Setup | Polish | Alpha | Not Started | — | Character System, Equipment System, Events System |
 | 12 | Communication Protocol | Polish | Alpha | Not Started | — | Combat System, Character System |
@@ -172,10 +172,10 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 12 |
-| Design docs started | 7 |
+| Design docs started | 8 |
 | Design docs reviewed | 0 (pending /design-review in fresh sessions) |
 | Design docs approved | 0 (pending) |
-| MVP systems designed | 7 / 9 |
+| MVP systems designed | 8 / 9 |
 | Vertical Slice systems designed | 0 / 1 |
 | Alpha systems designed | 0 / 2 |
 
@@ -196,4 +196,8 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 - [x] Design Character System (complete — CD-GDD-ALIGN: APPROVE 2026-05-25; 41 ACs, 2 open rulings flagged)
 - [ ] Run `/design-review design/gdd/character-system.md` in a FRESH session (mandatory)
 - [x] Design Equipment Degradation (complete — CD-GDD-ALIGN: APPROVE 2026-05-25; 29 ACs, 3 DEFERREDs flagged)
+- [ ] Run `/design-review design/gdd/equipment-degradation.md` in a FRESH session (mandatory)
+- [x] Design Item System (complete — CD-GDD-ALIGN: CONCERNS accepted 2026-05-25; 3 revisions applied: split-authority Rule 3, Tuning Knob 7 synergy scope boundary, AC language updates)
+- [ ] Run `/design-review design/gdd/item-system.md` in a FRESH session (mandatory)
+- [ ] Design Combat System (System #9 in design order — last MVP system; depends on all Core + Item System)
 - [ ] Run `/gate-check systems-design` when all MVP GDDs are complete

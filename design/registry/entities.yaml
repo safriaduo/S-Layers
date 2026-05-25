@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-05-25"  # equipment-degradation.md added: N_strips, S_layer, A_weapon formulas; referenced_by updated for E_slot, S_encounter, T_target, T_board, the_pilgrim, the_martyr
+last_updated: "2026-05-25"  # item-system.md added: E_item, S_combined formulas; referenced_by updated for E_slot, S_encounter, S_layer, T_accum, accumulate_floor, accumulate_ceiling
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -222,6 +222,7 @@ formulas:
       - design/gdd/equipment-system.md
       - design/gdd/character-system.md  # starting sets use E_slot to verify balance (Formula 4 / S_encounter check)
       - design/gdd/equipment-degradation.md  # each layer in a set must have E_slot calibrated (S_layer formula uses E_slot per layer)
+      - design/gdd/item-system.md  # Formula 1 (E_item) uses p_c lookup from E_slot table; S_combined uses E_slot indirectly
     variables:
       - p_c    # activation probability, float (0.0, 1.0]
       - k      # output multiplier (k=1 for [N], k=2 for [N]×2, k=0 for fixed)
@@ -241,6 +242,7 @@ formulas:
       - design/gdd/equipment-system.md
       - design/gdd/character-system.md  # verifies each starting set; Pilgrim ≈65 (Penetrating-gated); Martyr ≈79.5 (DEFERRED self-cost)
       - design/gdd/equipment-degradation.md  # S_layer formula must keep each layer's S_encounter contribution in [54,74] band
+      - design/gdd/item-system.md  # S_combined formula is built on top of S_encounter_base; item-system.md references the [54,74] band
     variables:
       - S_throughput  # sum of E_slot for recurring zones, float
       - T_encounter   # expected turns per encounter, float [6,10]; use 8 for MVP
@@ -259,6 +261,7 @@ formulas:
     referenced_by:
       - design/gdd/dice-economy.md
       - design/gdd/equipment-system.md  # Formula 2 — Accumulate trigger timing calibration
+      - design/gdd/item-system.md  # Formula 2 (ΔS_threshold) uses T_accum to compute trigger frequency change from threshold reduction
     variables:
       - X  # Accumulate threshold, int [4,20]
       - p  # feeding probability, float (0.0,1.0]; ~0.65 at honest play
@@ -295,7 +298,7 @@ formulas:
     source: design/gdd/equipment-degradation.md
     referenced_by:
       - design/gdd/equipment-degradation.md
-      # design/gdd/item-system.md — add when authored; item modifiers interact with S_layer balance per layer
+      - design/gdd/item-system.md  # item modifiers add to individual layer output; E_item formula uses T_active from S_layer; S_combined uses S_layer sum as baseline
     variables:
       - E_slot_i  # expected per-turn output of zone i on layer i, float; from E_slot formula
       - T_active_i  # expected turns this layer is active (= 1 / H_pt for MVP), float
@@ -325,6 +328,45 @@ formulas:
       reveals the next Weapon layer exactly as a hit would. When A_weapon=0, Weapon slot is
       inert — no further self-strips possible. B_weapon_total (Martyr) = 8.94 + 13.41 + 17.88 = 40.23.
       Feeds the Martyr S_encounter DEFERRED calibration (D-3 in equipment-degradation.md)."
+    added: 2026-05-25
+    revised: ""
+
+  - name: E_item
+    status: active
+    source: design/gdd/item-system.md
+    referenced_by:
+      - design/gdd/item-system.md
+      # design/gdd/combat-system.md — add when authored; combat designers use E_item to verify item power relative to base set output
+    variables:
+      - p_c       # activation probability of host zone, float (0.0, 1.0]; from E_slot lookup
+      - k_bonus   # flat bonus value on the item card ("+k"), int [1, 6]
+      - T_active  # expected turns item is live on its host layer, float [0, T_encounter]; ≈ 1/H_pt per layer
+    output_range: [0, 6]
+    expression: "E_item = p_c × k_bonus × T_active   (per-turn contribution while attached)"
+    notes: "Per-turn output contribution of a Type 2 (Output Amplification) item.
+      Encounter contribution: E_item_encounter = E_item × T_active = p_c × k_bonus × T_active².
+      For passive zone items (Ruling A): E_passive_item = P_strip × k_bonus.
+      Design-time check only — not computed at the table. Feeds S_combined formula."
+    added: 2026-05-25
+    revised: ""
+
+  - name: S_combined
+    status: active
+    source: design/gdd/item-system.md
+    referenced_by:
+      - design/gdd/item-system.md
+      # design/gdd/combat-system.md — add when authored; combat balance must verify that S_combined advisory gate (≤85) is not broken by item combinations
+    variables:
+      - S_encounter_base  # equipment set S_encounter without items, float [54, 74]; from S_encounter formula
+      - E_item_encounter  # per-item encounter contribution from Type 2 items (Formula 1), float [0, ~20 aggregate]
+      - ΔS_threshold      # per-item encounter delta from Type 3 items (Formula 2), float [0, ~15 aggregate]
+    output_range: [54, 105]
+    expression: "S_combined = S_encounter_base + Σ E_item_encounter(i) + Σ ΔS_threshold(j)"
+    notes: "Combined encounter output of an equipment set plus all attached items.
+      Balance gates: advisory ≤85 (design review); hard production gate ≤105 (degenerate above 105).
+      Lower bound ≥54: items should not reduce output (net-negative items are misdesigns).
+      Design-time check only. Type 1 items: re-run E_slot with modified constraint; recompute S_encounter_base.
+      Type 4 items: no S_combined change — check D_agg separately for damage→heal mutations."
     added: 2026-05-25
     revised: ""
 
@@ -425,6 +467,7 @@ constants:
       - design/gdd/dice-economy.md
       - design/gdd/equipment-system.md  # Formula 1 — unconstrained E[N] baseline = 4.47
       # design/gdd/combat-system.md — add when authored; calibrate expected damage output
+      # (item-system.md uses E_N_max only indirectly via E_slot lookups — no direct reference)
     value: 4.47
     unit: die-face-average
     notes: "Expected placed-die value when the player applies max-selection strategy
@@ -440,6 +483,7 @@ constants:
     referenced_by:
       - design/gdd/dice-economy.md
       - design/gdd/equipment-system.md  # Formula 2 + AC-24: hard minimum threshold = 4
+      - design/gdd/item-system.md  # Type 3 items cannot reduce threshold below 4; floor printed on each item card
     value: 4
     unit: accumulate-total
     notes: "Hard minimum Accumulate threshold. Below 4, the effect fires nearly
@@ -453,6 +497,7 @@ constants:
     referenced_by:
       - design/gdd/dice-economy.md
       - design/gdd/equipment-system.md  # Formula 2 + Tuning Knob 1: hard maximum threshold = 20
+      - design/gdd/item-system.md  # items cannot push any threshold above 20; ceiling referenced in Rule 5 Type 3 constraints
     value: 20
     unit: accumulate-total
     notes: "Hard maximum Accumulate threshold. Above 20, the threshold is unreachable
@@ -468,6 +513,7 @@ constants:
       - design/gdd/equipment-system.md
       - design/gdd/character-system.md  # starting sets verified against [54,74] band; see S_encounter Comparison table
       - design/gdd/equipment-degradation.md  # layer transitions must not break set balance; S_layer sum must stay in [54,74]
+      - design/gdd/item-system.md  # S_combined formula uses T_target band [54,74] as lower bound; advisory gate = 85 = T_target × 1.33
     value: 64
     unit: encounter-output-units
     notes: "Balance target for all equipment sets: S_encounter = D_player_base (8) × T_encounter (8) = 64.
