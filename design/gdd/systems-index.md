@@ -27,7 +27,7 @@ S-Layers is a cooperative board game built on five interlocking rule modules: di
 | 4 | Equipment System | Core | MVP | Designed | [design/gdd/equipment-system.md](equipment-system.md) | Dice Economy |
 | 5 | Angel System | Core | MVP | Designed | [design/gdd/angel-system.md](angel-system.md) | Dice Economy, Integrity System |
 | 6 | Character System | Core | MVP | Designed | [design/gdd/character-system.md](character-system.md) | Equipment System, Dice Economy |
-| 7 | Equipment Degradation | Core | MVP | Not Started | — | Equipment System, Integrity System |
+| 7 | Equipment Degradation | Core | MVP | Designed | [design/gdd/equipment-degradation.md](equipment-degradation.md) | Equipment System, Integrity System |
 | 8 | Combat System | Feature | MVP | Not Started | — | Dice Economy, Integrity System, Equipment System, Equipment Degradation, Character System, Angel System |
 | 9 | Item System | Feature | MVP | Not Started | — | Equipment System, Equipment Degradation |
 | 10 | Events System | Feature | Vertical Slice | Not Started | — | Combat System, Item System, Win/Loss Conditions |
@@ -172,10 +172,10 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 12 |
-| Design docs started | 6 |
+| Design docs started | 7 |
 | Design docs reviewed | 0 (pending /design-review in fresh sessions) |
 | Design docs approved | 0 (pending) |
-| MVP systems designed | 6 / 9 |
+| MVP systems designed | 7 / 9 |
 | Vertical Slice systems designed | 0 / 1 |
 | Alpha systems designed | 0 / 2 |
 
@@ -195,5 +195,5 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 - [ ] Run `/design-review design/gdd/angel-system.md` in a FRESH session (mandatory)
 - [x] Design Character System (complete — CD-GDD-ALIGN: APPROVE 2026-05-25; 41 ACs, 2 open rulings flagged)
 - [ ] Run `/design-review design/gdd/character-system.md` in a FRESH session (mandatory)
-- [ ] Design Equipment Degradation next (System #7 — next Core candidate)
+- [x] Design Equipment Degradation (complete — CD-GDD-ALIGN: APPROVE 2026-05-25; 29 ACs, 3 DEFERREDs flagged)
 - [ ] Run `/gate-check systems-design` when all MVP GDDs are complete

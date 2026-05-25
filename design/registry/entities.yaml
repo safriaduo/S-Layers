@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-05-25"
+last_updated: "2026-05-25"  # equipment-degradation.md added: N_strips, S_layer, A_weapon formulas; referenced_by updated for E_slot, S_encounter, T_target, T_board, the_pilgrim, the_martyr
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -54,7 +54,7 @@ entities:
     source: design/gdd/character-system.md
     referenced_by:
       - design/gdd/character-system.md
-      # design/gdd/equipment-degradation.md — add when authored; owns layer ordering for Pilgrim's starting set
+      - design/gdd/equipment-degradation.md  # owns layer ordering and S_layer balance for Pilgrim's starting set
       # design/gdd/game-setup.md — add when authored; character selection and starting equipment dealing
     L_total: 8
     head_layers: 3
@@ -73,7 +73,7 @@ entities:
     source: design/gdd/character-system.md
     referenced_by:
       - design/gdd/character-system.md
-      # design/gdd/equipment-degradation.md — add when authored; owns layer ordering for Martyr's starting set
+      - design/gdd/equipment-degradation.md  # owns layer ordering and S_layer balance for Martyr's starting set; A_weapon example uses Martyr Weapon
       # design/gdd/game-setup.md — add when authored; character selection and starting equipment dealing
     L_total: 10
     head_layers: 3
@@ -150,6 +150,7 @@ formulas:
     referenced_by:
       - design/gdd/integrity-system.md
       - design/gdd/character-system.md  # feeds T_board calculation; verifies T_board per character
+      - design/gdd/equipment-degradation.md  # feeds N_strips guardrail (N_strips < L_total)
       # design/gdd/angel-system.md — add when authored; use to calibrate Angel layer HP values
     variables:
       - n  # party size, int {1,2,3,4}
@@ -185,6 +186,7 @@ formulas:
     referenced_by:
       - design/gdd/integrity-system.md
       - design/gdd/character-system.md  # verifies T_board per character (Formula 1); Pilgrim=8.0, Martyr=10.0 at H_pt=1.0
+      - design/gdd/equipment-degradation.md  # N_strips guardrail references T_board; T_board ≥ T_encounter required
     variables:
       - L_total  # total layers across all 3 slots, int [3,∞); defined by Character System
       - H_pt  # expected hits per player per turn, float [0.5,3.0]; defined by Angel System
@@ -219,7 +221,7 @@ formulas:
     referenced_by:
       - design/gdd/equipment-system.md
       - design/gdd/character-system.md  # starting sets use E_slot to verify balance (Formula 4 / S_encounter check)
-      # design/gdd/equipment-degradation.md — add when authored; each layer in a set must have E_slot calibrated
+      - design/gdd/equipment-degradation.md  # each layer in a set must have E_slot calibrated (S_layer formula uses E_slot per layer)
     variables:
       - p_c    # activation probability, float (0.0, 1.0]
       - k      # output multiplier (k=1 for [N], k=2 for [N]×2, k=0 for fixed)
@@ -238,7 +240,7 @@ formulas:
     referenced_by:
       - design/gdd/equipment-system.md
       - design/gdd/character-system.md  # verifies each starting set; Pilgrim ≈65 (Penetrating-gated); Martyr ≈79.5 (DEFERRED self-cost)
-      # design/gdd/equipment-degradation.md — add when authored; all sets must pass [54,74] check per layer
+      - design/gdd/equipment-degradation.md  # S_layer formula must keep each layer's S_encounter contribution in [54,74] band
     variables:
       - S_throughput  # sum of E_slot for recurring zones, float
       - T_encounter   # expected turns per encounter, float [6,10]; use 8 for MVP
@@ -267,6 +269,63 @@ formulas:
       play p ≈ 0.65, giving effective input ~2.75/turn. Use with Accumulate threshold
       design tiers (Tick 5-6, Charge 8-12, Ritual 15-18) to calibrate card power."
     added: 2026-05-23
+    revised: ""
+
+  - name: N_strips
+    status: active
+    source: design/gdd/equipment-degradation.md
+    referenced_by:
+      - design/gdd/equipment-degradation.md
+      # design/gdd/combat-system.md — add when authored; encounter pacing uses N_strips to validate strip rate
+    variables:
+      - H_pt   # expected hits taken per player per turn, float [0.5,3.0]; defined by Angel System; use 1.0 for MVP
+      - T_encounter  # expected turns per encounter, float [6,10]; use 8 for MVP
+    output_range: [3.0, 30.0]
+    expression: "H_pt × T_encounter"
+    notes: "Expected total layer strips per player per encounter. Guardrail: N_strips < L_total
+      (player must not lose all layers in one encounter). At MVP (H_pt=1.0, T_encounter=8):
+      N_strips=8.0. Pilgrim L_total=8 is the binding constraint — exactly at limit.
+      If H_pt rises above 1.0 in playtests, Pilgrim L_total must increase.
+      Feeds Tuning Knob 1 (layer count) and Tuning Knob 3 (self-strip cost calibration)."
+    added: 2026-05-25
+    revised: ""
+
+  - name: S_layer
+    status: active
+    source: design/gdd/equipment-degradation.md
+    referenced_by:
+      - design/gdd/equipment-degradation.md
+      # design/gdd/item-system.md — add when authored; item modifiers interact with S_layer balance per layer
+    variables:
+      - E_slot_i  # expected per-turn output of zone i on layer i, float; from E_slot formula
+      - T_active_i  # expected turns this layer is active (= 1 / H_pt for MVP), float
+      - B_burst_i   # burst credit from one-shot/conditional effects on layer i, float
+    output_range: [0, "layer-dependent"]
+    expression: "S_layer(i) = E_slot(i) × T_active(i) + B_burst(i);  sum across layers ∈ [54, 74]"
+    notes: "Per-layer contribution to total encounter output. The SUM across all layers of a
+      set must fall in [54, 74] — the same S_encounter band that applies to the full set.
+      Individual layers may be above or below this band; it is the total that must balance.
+      Martyr Body example: L1 E_slot=4.47 × T=1 + B=0 = 4.47; sum across 4 layers ≈ 17.88–26.82
+      depending on layer shape. Full balance DEFERRED until playtests confirm P_strip values."
+    added: 2026-05-25
+    revised: ""
+
+  - name: A_weapon
+    status: active
+    source: design/gdd/equipment-degradation.md
+    referenced_by:
+      - design/gdd/equipment-degradation.md
+      # design/gdd/combat-system.md — add when authored; uses A_weapon to track Martyr self-strip charges
+    variables:
+      - N_weapon_layers  # number of layers in the Weapon slot, int; defined by Character System
+    output_range: [1, 5]
+    expression: "A_weapon = N_weapon_layers"
+    notes: "Total self-strip charges available in the Weapon slot. Equals number of Weapon layers.
+      Martyr Weapon has 3 layers → A_weapon=3. Each self-strip (Lose 1 Integrity on Weapon)
+      reveals the next Weapon layer exactly as a hit would. When A_weapon=0, Weapon slot is
+      inert — no further self-strips possible. B_weapon_total (Martyr) = 8.94 + 13.41 + 17.88 = 40.23.
+      Feeds the Martyr S_encounter DEFERRED calibration (D-3 in equipment-degradation.md)."
+    added: 2026-05-25
     revised: ""
 
 # Example:
@@ -408,7 +467,7 @@ constants:
     referenced_by:
       - design/gdd/equipment-system.md
       - design/gdd/character-system.md  # starting sets verified against [54,74] band; see S_encounter Comparison table
-      # design/gdd/equipment-degradation.md — add when authored; layer transitions must not break set balance
+      - design/gdd/equipment-degradation.md  # layer transitions must not break set balance; S_layer sum must stay in [54,74]
     value: 64
     unit: encounter-output-units
     notes: "Balance target for all equipment sets: S_encounter = D_player_base (8) × T_encounter (8) = 64.
