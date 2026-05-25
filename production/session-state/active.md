@@ -4,12 +4,11 @@
 **Stage**: Concept
 
 ## Current Task
-Equipment System GDD — COMPLETE (2026-05-25)
-- File: design/gdd/equipment-system.md
-- All 8 required sections complete ✓
-- CD-GDD-ALIGN: CONCERNS accepted — two revisions applied (die fizzles rule, default resolution order)
-- Entity registry updated ✓
-- Systems index updated ✓ (Equipment System → Designed, 4/9 MVP GDDs complete)
+Angel System GDD — COMPLETE (2026-05-25)
+- File: design/gdd/angel-system.md
+- Status: Designed — CD-GDD-ALIGN: CONCERNS addressed (2026-05-25)
+- Sections complete: Overview ✓, Player Fantasy ✓, Detailed Design ✓, Formulas ✓, Edge Cases ✓, Dependencies ✓, Tuning Knobs ✓, Acceptance Criteria ✓ (34 ACs — added AC-34 for Rule 4.6)
+- CD concerns resolved: HIGH (Rule 7.8 multi-Angel ritual + physical board UX downstream req), MEDIUM (Rule 4.6 BUFF secondary component mandate), LOW accepted, INFO skipped
 
 ## Progress
 - [x] /start — project initialized, stage set to Concept, review mode set to full
@@ -39,13 +38,15 @@ Equipment System GDD — COMPLETE (2026-05-25)
 - design/gdd/integrity-system.md — COMPLETE (2026-05-24) — all 8 sections ✓, CD-GDD-ALIGN: CONCERNS (accepted)
 - design/gdd/win-loss-conditions.md — COMPLETE (2026-05-24) — all 8 sections ✓, CD-GDD-ALIGN: APPROVE
 - design/gdd/equipment-system.md — COMPLETE (2026-05-25) — all 8 sections ✓, CD-GDD-ALIGN: CONCERNS (accepted, 2 revisions applied)
+- design/gdd/angel-system.md — COMPLETE (2026-05-25) — all 8 sections ✓, 34 ACs, CD-GDD-ALIGN: CONCERNS addressed (Rule 7.8 ritual added, Rule 4.6 BUFF mandate added)
 
 ## Next Steps
-1. Run `/design-review design/gdd/equipment-system.md` in a FRESH session (mandatory)
-2. Run `/design-review design/gdd/dice-economy.md` in a FRESH session (mandatory)
-3. Run `/design-review design/gdd/integrity-system.md` in a FRESH session (mandatory)
-4. Run `/design-review design/gdd/win-loss-conditions.md` in a FRESH session (mandatory)
-5. Design next Core system — Angel System, Character System, or Equipment Degradation (parallel candidates)
+1. Run `/design-review design/gdd/angel-system.md` in a FRESH session (mandatory)
+2. Run `/design-review design/gdd/equipment-system.md` in a FRESH session (mandatory)
+3. Run `/design-review design/gdd/dice-economy.md` in a FRESH session (mandatory)
+4. Run `/design-review design/gdd/integrity-system.md` in a FRESH session (mandatory)
+5. Run `/design-review design/gdd/win-loss-conditions.md` in a FRESH session (mandatory)
+6. Design next Core system — Character System or Equipment Degradation (parallel candidates)
 6. Build MVP physical prototype (months 1-3)
 7. Begin audience building in parallel (month 1+)
 8. Search for woodcut illustrator (month 2)
