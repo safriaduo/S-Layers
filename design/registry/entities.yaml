@@ -176,12 +176,50 @@ formulas:
     added: 2026-05-23
     revised: ""
 
+  - name: E_slot
+    status: active
+    source: design/gdd/equipment-system.md
+    referenced_by:
+      - design/gdd/equipment-system.md
+      # design/gdd/equipment-degradation.md — add when authored; each layer in a set must have E_slot calibrated
+      # design/gdd/character-system.md — add when authored; starting sets use E_slot to verify balance
+    variables:
+      - p_c    # activation probability, float (0.0, 1.0]
+      - k      # output multiplier (k=1 for [N], k=2 for [N]×2, k=0 for fixed)
+      - E_N_c  # E[N | constraint], from lookup table; unconstrained = 4.47
+    output_range: [0, 14]
+    expression: "p_c × k × E[N | constraint]"
+    notes: "Expected per-turn output of a single equipment zone. Unconstrained baseline
+      at k=1: 4.47. Cap of k=2 without compensating constraint or one-shot condition.
+      Fixed-value effects: use the fixed value directly (k=0 path not in formula)."
+    added: 2026-05-25
+    revised: ""
+
+  - name: S_encounter
+    status: active
+    source: design/gdd/equipment-system.md
+    referenced_by:
+      - design/gdd/equipment-system.md
+      # design/gdd/equipment-degradation.md — add when authored; all sets must pass [54,74] check per layer
+      # design/gdd/character-system.md — add when authored; verify each starting set
+    variables:
+      - S_throughput  # sum of E_slot for recurring zones, float
+      - T_encounter   # expected turns per encounter, float [6,10]; use 8 for MVP
+      - B_burst       # total burst credit from one-shot and conditional zones, float
+    output_range: [0, 120]
+    expression: "(S_throughput × T_encounter) + B_burst"
+    notes: "Encounter-level output for a complete equipment set. All sets target [54, 74]
+      at T_encounter=8. No power tiers — shape of power varies, total does not.
+      Martyrdom set computed at 17.24 (under-budget — must be redesigned before production)."
+    added: 2026-05-25
+    revised: ""
+
   - name: T_accum
     status: active
     source: design/gdd/dice-economy.md
     referenced_by:
       - design/gdd/dice-economy.md
-      # design/gdd/equipment-system.md — add when authored; use to calibrate Accumulate thresholds
+      - design/gdd/equipment-system.md  # Formula 2 — Accumulate trigger timing calibration
     variables:
       - X  # Accumulate threshold, int [4,20]
       - p  # feeding probability, float (0.0,1.0]; ~0.65 at honest play
@@ -289,7 +327,7 @@ constants:
     source: design/gdd/dice-economy.md
     referenced_by:
       - design/gdd/dice-economy.md
-      # design/gdd/equipment-system.md — add when authored; calibrate slot effect power against 4.47
+      - design/gdd/equipment-system.md  # Formula 1 — unconstrained E[N] baseline = 4.47
       # design/gdd/combat-system.md — add when authored; calibrate expected damage output
     value: 4.47
     unit: die-face-average
@@ -305,7 +343,7 @@ constants:
     source: design/gdd/dice-economy.md
     referenced_by:
       - design/gdd/dice-economy.md
-      # design/gdd/equipment-system.md — add when authored; no Accumulate card may use threshold below this
+      - design/gdd/equipment-system.md  # Formula 2 + AC-24: hard minimum threshold = 4
     value: 4
     unit: accumulate-total
     notes: "Hard minimum Accumulate threshold. Below 4, the effect fires nearly
@@ -318,13 +356,29 @@ constants:
     source: design/gdd/dice-economy.md
     referenced_by:
       - design/gdd/dice-economy.md
-      # design/gdd/equipment-system.md — add when authored; no Accumulate card may use threshold above this
+      - design/gdd/equipment-system.md  # Formula 2 + Tuning Knob 1: hard maximum threshold = 20
     value: 20
     unit: accumulate-total
     notes: "Hard maximum Accumulate threshold. Above 20, the threshold is unreachable
       at honest feeding rates (~65% consistency, E[N/turn] ≈ 2.75). Use even numbers
       only in physical play to reduce token-tracking friction."
     added: 2026-05-23
+    revised: ""
+
+  - name: T_target
+    status: active
+    source: design/gdd/equipment-system.md
+    referenced_by:
+      - design/gdd/equipment-system.md
+      # design/gdd/equipment-degradation.md — add when authored; layer transitions must not break set balance
+      # design/gdd/character-system.md — add when authored; starting sets must each pass balance check
+    value: 64
+    unit: encounter-output-units
+    notes: "Balance target for all equipment sets: S_encounter = D_player_base (8) × T_encounter (8) = 64.
+      Tolerance ±~10 → band [54, 74]. Every set targets this band regardless of style.
+      If D_player_base or T_encounter shifts in playtests, recalibrate all set balances.
+      Owned by Equipment System; referenced wherever card balance is checked."
+    added: 2026-05-25
     revised: ""
 
 # Example:

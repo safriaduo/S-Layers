@@ -1,12 +1,15 @@
 # Session State — S-Layers
 
-**Last updated**: 2026-05-23
+**Last updated**: 2026-05-25
 **Stage**: Concept
 
 ## Current Task
-Win/Loss Conditions GDD COMPLETE — CD-GDD-ALIGN: APPROVE 2026-05-24
-- File: design/gdd/win-loss-conditions.md
-- All 8 sections written ✓, pending /design-review in fresh session
+Equipment System GDD — COMPLETE (2026-05-25)
+- File: design/gdd/equipment-system.md
+- All 8 required sections complete ✓
+- CD-GDD-ALIGN: CONCERNS accepted — two revisions applied (die fizzles rule, default resolution order)
+- Entity registry updated ✓
+- Systems index updated ✓ (Equipment System → Designed, 4/9 MVP GDDs complete)
 
 ## Progress
 - [x] /start — project initialized, stage set to Concept, review mode set to full
@@ -35,16 +38,18 @@ Win/Loss Conditions GDD COMPLETE — CD-GDD-ALIGN: APPROVE 2026-05-24
 - design/gdd/dice-economy.md — complete GDD (CD-GDD-ALIGN: APPROVE)
 - design/gdd/integrity-system.md — COMPLETE (2026-05-24) — all 8 sections ✓, CD-GDD-ALIGN: CONCERNS (accepted)
 - design/gdd/win-loss-conditions.md — COMPLETE (2026-05-24) — all 8 sections ✓, CD-GDD-ALIGN: APPROVE
+- design/gdd/equipment-system.md — COMPLETE (2026-05-25) — all 8 sections ✓, CD-GDD-ALIGN: CONCERNS (accepted, 2 revisions applied)
 
 ## Next Steps
-1. Run `/design-review design/gdd/dice-economy.md` in a FRESH session (mandatory)
-2. Run `/design-review design/gdd/integrity-system.md` in a FRESH session (mandatory before next system)
-3. ~~Design Win/Loss Conditions~~ — COMPLETE (2026-05-24)
-3b. Run `/design-review design/gdd/win-loss-conditions.md` in a FRESH session (mandatory)
-4. Build MVP physical prototype (months 1-3)
-5. Begin audience building in parallel (month 1+)
-6. Search for woodcut illustrator (month 2)
-7. Run /art-bible — visual identity specification
+1. Run `/design-review design/gdd/equipment-system.md` in a FRESH session (mandatory)
+2. Run `/design-review design/gdd/dice-economy.md` in a FRESH session (mandatory)
+3. Run `/design-review design/gdd/integrity-system.md` in a FRESH session (mandatory)
+4. Run `/design-review design/gdd/win-loss-conditions.md` in a FRESH session (mandatory)
+5. Design next Core system — Angel System, Character System, or Equipment Degradation (parallel candidates)
+6. Build MVP physical prototype (months 1-3)
+7. Begin audience building in parallel (month 1+)
+8. Search for woodcut illustrator (month 2)
+9. Run /art-bible — visual identity specification
 
 ## Open Questions
 - Does the dice economy balance? (Monte Carlo simulation)

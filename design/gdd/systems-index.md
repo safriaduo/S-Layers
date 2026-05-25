@@ -24,7 +24,7 @@ S-Layers is a cooperative board game built on five interlocking rule modules: di
 | 1 | Dice Economy | Foundation | MVP | Designed | [design/gdd/dice-economy.md](dice-economy.md) | — |
 | 2 | Integrity System | Foundation | MVP | Designed | [design/gdd/integrity-system.md](integrity-system.md) | — |
 | 3 | Win/Loss Conditions | Foundation | MVP | Designed | [design/gdd/win-loss-conditions.md](win-loss-conditions.md) | — |
-| 4 | Equipment System | Core | MVP | Not Started | — | Dice Economy |
+| 4 | Equipment System | Core | MVP | Designed | [design/gdd/equipment-system.md](equipment-system.md) | Dice Economy |
 | 5 | Angel System | Core | MVP | Not Started | — | Dice Economy, Integrity System |
 | 6 | Character System | Core | MVP | Not Started | — | Equipment System, Dice Economy |
 | 7 | Equipment Degradation | Core | MVP | Not Started | — | Equipment System, Integrity System |
@@ -172,10 +172,10 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 12 |
-| Design docs started | 3 |
+| Design docs started | 4 |
 | Design docs reviewed | 0 (pending /design-review in fresh sessions) |
 | Design docs approved | 0 (pending) |
-| MVP systems designed | 3 / 9 |
+| MVP systems designed | 4 / 9 |
 | Vertical Slice systems designed | 0 / 1 |
 | Alpha systems designed | 0 / 2 |
 
@@ -188,5 +188,8 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 - [ ] Run `/design-review design/gdd/dice-economy.md` in a FRESH session (not the same session as /design-system)
 - [x] Design Integrity System (complete — CD-GDD-ALIGN: CONCERNS accepted 2026-05-24)
 - [x] Design Win/Loss Conditions (complete — CD-GDD-ALIGN: APPROVE 2026-05-24)
+- [x] Design Equipment System (complete — CD-GDD-ALIGN: CONCERNS accepted 2026-05-25; two revisions applied)
+- [ ] Run `/design-review design/gdd/equipment-system.md` in a FRESH session (mandatory)
 - [ ] Run `/design-review design/gdd/win-loss-conditions.md` in a FRESH session
+- [ ] Design Angel System, Character System, or Equipment Degradation next (parallel candidates)
 - [ ] Run `/gate-check systems-design` when all MVP GDDs are complete
