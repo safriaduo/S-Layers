@@ -26,7 +26,7 @@ S-Layers is a cooperative board game built on five interlocking rule modules: di
 | 3 | Win/Loss Conditions | Foundation | MVP | Designed | [design/gdd/win-loss-conditions.md](win-loss-conditions.md) | — |
 | 4 | Equipment System | Core | MVP | Designed | [design/gdd/equipment-system.md](equipment-system.md) | Dice Economy |
 | 5 | Angel System | Core | MVP | Designed | [design/gdd/angel-system.md](angel-system.md) | Dice Economy, Integrity System |
-| 6 | Character System | Core | MVP | Not Started | — | Equipment System, Dice Economy |
+| 6 | Character System | Core | MVP | Designed | [design/gdd/character-system.md](character-system.md) | Equipment System, Dice Economy |
 | 7 | Equipment Degradation | Core | MVP | Not Started | — | Equipment System, Integrity System |
 | 8 | Combat System | Feature | MVP | Not Started | — | Dice Economy, Integrity System, Equipment System, Equipment Degradation, Character System, Angel System |
 | 9 | Item System | Feature | MVP | Not Started | — | Equipment System, Equipment Degradation |
@@ -172,10 +172,10 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 12 |
-| Design docs started | 5 |
+| Design docs started | 6 |
 | Design docs reviewed | 0 (pending /design-review in fresh sessions) |
 | Design docs approved | 0 (pending) |
-| MVP systems designed | 5 / 9 |
+| MVP systems designed | 6 / 9 |
 | Vertical Slice systems designed | 0 / 1 |
 | Alpha systems designed | 0 / 2 |
 
@@ -193,5 +193,7 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 - [ ] Run `/design-review design/gdd/win-loss-conditions.md` in a FRESH session
 - [x] Design Angel System (complete — CD-GDD-ALIGN: CONCERNS addressed 2026-05-25)
 - [ ] Run `/design-review design/gdd/angel-system.md` in a FRESH session (mandatory)
-- [ ] Design Character System or Equipment Degradation next (parallel candidates)
+- [x] Design Character System (complete — CD-GDD-ALIGN: APPROVE 2026-05-25; 41 ACs, 2 open rulings flagged)
+- [ ] Run `/design-review design/gdd/character-system.md` in a FRESH session (mandatory)
+- [ ] Design Equipment Degradation next (System #7 — next Core candidate)
 - [ ] Run `/gate-check systems-design` when all MVP GDDs are complete

@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-05-23"
+last_updated: "2026-05-25"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -48,7 +48,44 @@ last_updated: "2026-05-23"
 # Attribute fields: any key stats that could appear in another GDD
 #   (health, damage, drops, faction, etc.)
 
-entities: []
+entities:
+  - name: the_pilgrim
+    status: active
+    source: design/gdd/character-system.md
+    referenced_by:
+      - design/gdd/character-system.md
+      # design/gdd/equipment-degradation.md — add when authored; owns layer ordering for Pilgrim's starting set
+      # design/gdd/game-setup.md — add when authored; character selection and starting equipment dealing
+    L_total: 8
+    head_layers: 3
+    body_layers: 2
+    weapon_layers: 3
+    gift: "Sacrifice 1 die. Next turn: gain 1 extra die with any face you choose."
+    archetype: burst-accumulator
+    notes: "Pilgrim S_encounter ≈ 23 without Penetrating; ≈ 65 with Penetrating at n_L=3.
+      Encounter designers must pair Pilgrim with Angels of ≥3 layers or provide
+      alternative high-output path. See Tuning Knob 6 in character-system.md."
+    added: 2026-05-25
+    revised: ""
+
+  - name: the_martyr
+    status: active
+    source: design/gdd/character-system.md
+    referenced_by:
+      - design/gdd/character-system.md
+      # design/gdd/equipment-degradation.md — add when authored; owns layer ordering for Martyr's starting set
+      # design/gdd/game-setup.md — add when authored; character selection and starting equipment dealing
+    L_total: 10
+    head_layers: 3
+    body_layers: 4
+    weapon_layers: 3
+    gift: "Reroll 1 die this turn. You must keep the new result."
+    archetype: self-consuming-attacker
+    notes: "Martyr S_encounter ≈ 79.5 pre-Integrity-cost. Self-Integrity Weapon cost
+      is the balancing mechanism — calibration DEFERRED until Equipment Degradation GDD
+      defines Weapon zone HP pool. See DEFERRED item D-6 in character-system.md."
+    added: 2026-05-25
+    revised: ""
 
 # Example (remove when first real entry is added):
 #
@@ -112,8 +149,8 @@ formulas:
     source: design/gdd/integrity-system.md
     referenced_by:
       - design/gdd/integrity-system.md
+      - design/gdd/character-system.md  # feeds T_board calculation; verifies T_board per character
       # design/gdd/angel-system.md — add when authored; use to calibrate Angel layer HP values
-      # design/gdd/character-system.md — add when authored; feeds T_board calculation
     variables:
       - n  # party size, int {1,2,3,4}
       - D_player_base  # expected damage per player per turn, float [7,10]; baseline = 8
@@ -147,7 +184,7 @@ formulas:
     source: design/gdd/integrity-system.md
     referenced_by:
       - design/gdd/integrity-system.md
-      # design/gdd/character-system.md — add when authored; verify T_board per character
+      - design/gdd/character-system.md  # verifies T_board per character (Formula 1); Pilgrim=8.0, Martyr=10.0 at H_pt=1.0
     variables:
       - L_total  # total layers across all 3 slots, int [3,∞); defined by Character System
       - H_pt  # expected hits per player per turn, float [0.5,3.0]; defined by Angel System
@@ -181,8 +218,8 @@ formulas:
     source: design/gdd/equipment-system.md
     referenced_by:
       - design/gdd/equipment-system.md
+      - design/gdd/character-system.md  # starting sets use E_slot to verify balance (Formula 4 / S_encounter check)
       # design/gdd/equipment-degradation.md — add when authored; each layer in a set must have E_slot calibrated
-      # design/gdd/character-system.md — add when authored; starting sets use E_slot to verify balance
     variables:
       - p_c    # activation probability, float (0.0, 1.0]
       - k      # output multiplier (k=1 for [N], k=2 for [N]×2, k=0 for fixed)
@@ -200,8 +237,8 @@ formulas:
     source: design/gdd/equipment-system.md
     referenced_by:
       - design/gdd/equipment-system.md
+      - design/gdd/character-system.md  # verifies each starting set; Pilgrim ≈65 (Penetrating-gated); Martyr ≈79.5 (DEFERRED self-cost)
       # design/gdd/equipment-degradation.md — add when authored; all sets must pass [54,74] check per layer
-      # design/gdd/character-system.md — add when authored; verify each starting set
     variables:
       - S_throughput  # sum of E_slot for recurring zones, float
       - T_encounter   # expected turns per encounter, float [6,10]; use 8 for MVP
@@ -269,8 +306,8 @@ constants:
     source: design/gdd/integrity-system.md
     referenced_by:
       - design/gdd/integrity-system.md
+      - design/gdd/character-system.md  # feeds T_board via D_agg; confirmed baseline 8 at MVP
       # design/gdd/angel-system.md — add when authored; feeds D_agg for HP calibration
-      # design/gdd/character-system.md — add when authored; feeds T_board
     value: 8
     unit: damage-per-player-per-turn
     notes: "Expected damage per player per turn at honest play with basic equipment
@@ -370,8 +407,8 @@ constants:
     source: design/gdd/equipment-system.md
     referenced_by:
       - design/gdd/equipment-system.md
+      - design/gdd/character-system.md  # starting sets verified against [54,74] band; see S_encounter Comparison table
       # design/gdd/equipment-degradation.md — add when authored; layer transitions must not break set balance
-      # design/gdd/character-system.md — add when authored; starting sets must each pass balance check
     value: 64
     unit: encounter-output-units
     notes: "Balance target for all equipment sets: S_encounter = D_player_base (8) × T_encounter (8) = 64.
