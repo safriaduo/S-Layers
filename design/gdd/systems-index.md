@@ -28,9 +28,9 @@ S-Layers is a cooperative board game built on five interlocking rule modules: di
 | 5 | Angel System | Core | MVP | Designed | [design/gdd/angel-system.md](angel-system.md) | Dice Economy, Integrity System |
 | 6 | Character System | Core | MVP | Designed | [design/gdd/character-system.md](character-system.md) | Equipment System, Dice Economy |
 | 7 | Equipment Degradation | Core | MVP | Designed | [design/gdd/equipment-degradation.md](equipment-degradation.md) | Equipment System, Integrity System |
-| 8 | Combat System | Feature | MVP | Not Started | — | Dice Economy, Integrity System, Equipment System, Equipment Degradation, Character System, Angel System |
+| 8 | Combat System | Feature | MVP | **Approved** | [design/gdd/combat-system.md](combat-system.md) | Dice Economy, Integrity System, Equipment System, Equipment Degradation, Character System, Angel System |
 | 9 | Item System | Feature | MVP | Designed | [design/gdd/item-system.md](item-system.md) | Equipment System, Equipment Degradation |
-| 10 | Events System | Feature | Vertical Slice | Not Started | — | Combat System, Item System, Win/Loss Conditions |
+| 10 | Events System | Feature | Vertical Slice | Designed | [design/gdd/events-system.md](events-system.md) | Combat System, Item System, Win/Loss Conditions |
 | 11 | Game Setup | Polish | Alpha | Not Started | — | Character System, Equipment System, Events System |
 | 12 | Communication Protocol | Polish | Alpha | Not Started | — | Combat System, Character System |
 
@@ -173,9 +173,9 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 |--------|-------|
 | Total systems identified | 12 |
 | Design docs started | 8 |
-| Design docs reviewed | 0 (pending /design-review in fresh sessions) |
-| Design docs approved | 0 (pending) |
-| MVP systems designed | 8 / 9 |
+| Design docs reviewed | 1 (combat-system.md — 2026-05-26) |
+| Design docs approved | 1 (combat-system.md — 2026-05-26) |
+| MVP systems designed | 9 / 9 |
 | Vertical Slice systems designed | 0 / 1 |
 | Alpha systems designed | 0 / 2 |
 
@@ -199,5 +199,6 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 - [ ] Run `/design-review design/gdd/equipment-degradation.md` in a FRESH session (mandatory)
 - [x] Design Item System (complete — CD-GDD-ALIGN: CONCERNS accepted 2026-05-25; 3 revisions applied: split-authority Rule 3, Tuning Knob 7 synergy scope boundary, AC language updates)
 - [ ] Run `/design-review design/gdd/item-system.md` in a FRESH session (mandatory)
-- [ ] Design Combat System (System #9 in design order — last MVP system; depends on all Core + Item System)
-- [ ] Run `/gate-check systems-design` when all MVP GDDs are complete
+- [x] Design Combat System (complete — CD-GDD-ALIGN: APPROVE 2026-05-26; 30 ACs, 4 open questions, 7 tuning knobs)
+- [ ] Run `/design-review` on all 9 MVP GDDs (fresh sessions — see active.md)
+- [ ] Run `/gate-check systems-design` when all MVP GDDs are reviewed and approved

@@ -29,9 +29,10 @@ The party wins when the "Angel cleared" trigger fires for the God card — meani
 The party loses when the "player board destroyed" trigger fires for any player — meaning all three equipment slots on one player's board are inert. When that trigger fires, the game state transitions to **Lost** immediately, except as specified in rule 6 (simultaneous termination) and rule 4 (timing window).
 
 **3. Timing of the Win/Loss check**
-The Win/Loss check fires at two points in the turn flow:
+The Win/Loss check fires at three points in the game flow:
 - **Check A — end of Angel Resolution Phase**: Evaluates "player board destroyed" only. If any board was destroyed by hit routing this phase, the transition fires before the Effect Resolution Phase begins.
 - **Check B — end of Effect Resolution Phase**: Evaluates both triggers — first "Angel cleared" (God stripped?), then "player board destroyed." Evaluated after all effects in the phase have fully resolved.
+- **Check C — end of Bad Event resolution (Events System)**: Evaluates "player board destroyed" only. Fires immediately after all effects on a Bad Event card have been applied. If any board is inert, the game transitions to Lost. This check fires outside of combat — it is not part of the 6-phase turn sequence. *(Added 2026-05-26 — Events System GDD Rule 3 Type C Step 5 defines Check C.)*
 
 **4. Remaining effects fire before Check B**
 A player whose board is destroyed during Effect Resolution Phase has all remaining placed die effects fire for the current phase before Check B runs. This rule is defined by the Integrity System (rule 13) and honored here.

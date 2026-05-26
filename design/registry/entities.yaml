@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-05-25"  # item-system.md added: E_item, S_combined formulas; referenced_by updated for E_slot, S_encounter, S_layer, T_accum, accumulate_floor, accumulate_ceiling
+last_updated: "2026-05-26"  # combat-system.md added: T_round, EPC formulas; referenced_by updated for N_strips, A_weapon, E_item, S_combined, E_N_max
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -279,7 +279,7 @@ formulas:
     source: design/gdd/equipment-degradation.md
     referenced_by:
       - design/gdd/equipment-degradation.md
-      # design/gdd/combat-system.md — add when authored; encounter pacing uses N_strips to validate strip rate
+      - design/gdd/combat-system.md  # Section F — referenced in EPC context; N_strips guardrail applies to Angel encounter design
     variables:
       - H_pt   # expected hits taken per player per turn, float [0.5,3.0]; defined by Angel System; use 1.0 for MVP
       - T_encounter  # expected turns per encounter, float [6,10]; use 8 for MVP
@@ -318,7 +318,7 @@ formulas:
     source: design/gdd/equipment-degradation.md
     referenced_by:
       - design/gdd/equipment-degradation.md
-      # design/gdd/combat-system.md — add when authored; uses A_weapon to track Martyr self-strip charges
+      - design/gdd/combat-system.md  # Section F — Martyr self-strip edge case (EC-13 / AC-22) depends on A_weapon charge count
     variables:
       - N_weapon_layers  # number of layers in the Weapon slot, int; defined by Character System
     output_range: [1, 5]
@@ -336,7 +336,7 @@ formulas:
     source: design/gdd/item-system.md
     referenced_by:
       - design/gdd/item-system.md
-      # design/gdd/combat-system.md — add when authored; combat designers use E_item to verify item power relative to base set output
+      - design/gdd/combat-system.md  # Section D — C_item variable in T_round formula counts active items; E_item is the basis for C_item β coefficient
     variables:
       - p_c       # activation probability of host zone, float (0.0, 1.0]; from E_slot lookup
       - k_bonus   # flat bonus value on the item card ("+k"), int [1, 6]
@@ -350,12 +350,58 @@ formulas:
     added: 2026-05-25
     revised: ""
 
+  - name: T_round
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/combat-system.md
+      # design/gdd/events-system.md — add when authored; EPC uses T_round to validate encounter pacing
+    variables:
+      - T_base   # base time for Phases 1-3 (fixed overhead), seconds; provisional = 30s
+      - n        # party size, int {1,2,3,4}
+      - α_4      # per-player time cost for Phase 4 (placement discussion), seconds; provisional = 120s
+      - α_5      # per-player time cost for Phase 5 (effect resolution), seconds; provisional = 90s
+      - α_6      # per-player time cost for Phase 6 (hit routing), seconds; provisional = 60s
+      - C_item   # count of active items on the table this round, int [0, n*3]
+      - β        # per-item time cost overhead, seconds; provisional = 30s
+    output_range: [30, 1800]
+    expression: "T_round = T_base + (α_4 × n) + (α_5 × n) + (α_6 × n) + (C_item × β)"
+    notes: "Round duration estimate in seconds. Calibration target: T_round ≈ 90 s at
+      n=2, C_item=1 (provisional α/β values). At n=4, C_item=4: T_round ≈ 1170 s
+      (worst-case pre-calibration). AC-26 is DEFERRED to playtest for coefficient
+      calibration. Used as input to EPC formula for encounter pacing validation."
+    added: 2026-05-26
+    revised: ""
+
+  - name: EPC
+    status: active
+    source: design/gdd/combat-system.md
+    referenced_by:
+      - design/gdd/combat-system.md
+      # design/gdd/angel-system.md — add when authored; every Angel design must pass EPC before production
+      # design/gdd/events-system.md — add when authored; encounter card design uses EPC
+    variables:
+      - T_session_lo   # minimum target encounter duration, seconds; = 300 (5 min)
+      - T_session_hi   # maximum target encounter duration, seconds; = 480 (8 min)
+      - T_round        # round duration estimate in seconds (see T_round formula)
+      - T_encounter_actual  # designer-specified number of turns for this encounter, int
+    output_range: ["PASS", "WARN"]
+    expression: "T_lo = ⌈T_session_lo / T_round⌉;  T_hi = ⌊T_session_hi / T_round⌋;
+      PASS if T_encounter_actual ∈ [T_lo, T_hi];  WARN otherwise"
+    notes: "Encounter Pacing Check — design-time validation tool. Not computed at the table.
+      Distinct from T_encounter=8 balance constant (owned by Equipment System / S_encounter).
+      T_encounter=8 is a calibration assumption for equipment output formulas.
+      T_encounter_actual is the per-Angel output of EPC and validates encounter length.
+      Example at T_round=90s: T_lo=4, T_hi=5. Example at T_round=120s: T_lo=3, T_hi=4."
+    added: 2026-05-26
+    revised: ""
+
   - name: S_combined
     status: active
     source: design/gdd/item-system.md
     referenced_by:
       - design/gdd/item-system.md
-      # design/gdd/combat-system.md — add when authored; combat balance must verify that S_combined advisory gate (≤85) is not broken by item combinations
+      - design/gdd/combat-system.md  # Section F and Tuning Knob 3 — post-combat item award links to S_combined advisory gate; combat balance verifies ≤85 not exceeded
     variables:
       - S_encounter_base  # equipment set S_encounter without items, float [54, 74]; from S_encounter formula
       - E_item_encounter  # per-item encounter contribution from Type 2 items (Formula 1), float [0, ~20 aggregate]
@@ -466,8 +512,7 @@ constants:
     referenced_by:
       - design/gdd/dice-economy.md
       - design/gdd/equipment-system.md  # Formula 1 — unconstrained E[N] baseline = 4.47
-      # design/gdd/combat-system.md — add when authored; calibrate expected damage output
-      # (item-system.md uses E_N_max only indirectly via E_slot lookups — no direct reference)
+      - design/gdd/combat-system.md  # Section D — T_round formula uses E_N_max indirectly via E_slot baseline for damage output calibration
     value: 4.47
     unit: die-face-average
     notes: "Expected placed-die value when the player applies max-selection strategy
