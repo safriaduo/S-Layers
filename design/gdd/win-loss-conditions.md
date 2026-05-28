@@ -1,8 +1,8 @@
 # Win/Loss Conditions
 
-> **Status**: Designed (pending /design-review in fresh session)
+> **Status**: Needs Revision — propagation update from angel-system.md redesign (2026-05-27)
 > **Author**: Federico Gallucci + Claude Code agents
-> **Last Updated**: 2026-05-24
+> **Last Updated**: 2026-05-27
 > **Implements Pillar**: Fast and Focused (primary); Cooperative Ownership (supporting)
 > **Creative Director Review (CD-GDD-ALIGN)**: APPROVED 2026-05-24
 
@@ -23,7 +23,7 @@ God is the only card in the dungeon with no cracks — bilateral symmetry, compl
 ### Core Rules
 
 **1. Victory condition**
-The party wins when the "Angel cleared" trigger fires for the God card — meaning all of God's layers have been stripped. God is always the final card in the Events deck. When God is cleared, the game state transitions to **Won** immediately. No further actions, effects, or phases resolve after the transition fires, except as specified in rule 6 (simultaneous termination).
+The party wins when the "Angel cleared" trigger fires for the God card — meaning all three slots (Head, Body, and Weapon) of the God card Angel are **Inert** (all layers in each slot have been stripped). God is always the final card in the Events deck. When God is cleared, the game state transitions to **Won** immediately. No further actions, effects, or phases resolve after the transition fires, except as specified in rule 6 (simultaneous termination).
 
 **2. Defeat condition**
 The party loses when the "player board destroyed" trigger fires for any player — meaning all three equipment slots on one player's board are inert. When that trigger fires, the game state transitions to **Lost** immediately, except as specified in rule 6 (simultaneous termination) and rule 4 (timing window).
@@ -40,8 +40,10 @@ A player whose board is destroyed during Effect Resolution Phase has all remaini
 **5. "Angel cleared" can only fire at Check B**
 God cannot be cleared during the Angel Resolution Phase. Damage to Angel layers resolves exclusively during Effect Resolution Phase. The "Angel cleared" trigger never fires at Check A.
 
-**6. Simultaneous termination**
-If Check B finds both "Angel cleared" and "player board destroyed" active in the same Effect Resolution Phase, **Victory prevails**. The game transitions to **Won**. The defeat trigger is discarded. *(Rationale: the party dealt the killing blow within the same phase window; the dungeon ends and its remaining threat does not outlast it.)*
+**6. Simultaneous termination — God card only**
+This rule applies **exclusively to the God card encounter**. For non-God Angels: if both "Angel cleared" and "player board destroyed" fire in the same phase, **Lost takes priority** — the party does not receive a victory result for defeating a non-God Angel in the same phase their board is destroyed. See Edge Cases (Non-God Angel simultaneous) for the full ruling.
+
+If Check B finds both "God cleared" and "player board destroyed" active in the same Effect Resolution Phase, **Victory prevails**. The game transitions to **Won**. The defeat trigger is discarded. *(Rationale: the party dealt the killing blow within the same phase window; the dungeon ends and its remaining threat does not outlast it.)*
 
 **7. Termination is final**
 Once Won or Lost, no further rules, effects, card text, or player actions apply. The session ends.
@@ -69,7 +71,8 @@ The party wins if any number of boards remain active when God is cleared, includ
 
 | System | Interface | Notes |
 |---|---|---|
-| **Integrity System** | Receives: "player board destroyed" (all 3 slots inert) and "Angel cleared" (all Angel layers stripped) | Integrity System defines the conditions; this GDD defines what happens when they fire. |
+| **Integrity System** | Receives: "player board destroyed" (all 3 player slots inert) and "Angel cleared" (all 3 Angel slots Inert) | Integrity System defines the conditions; this GDD defines what happens when they fire. |
+| **Angel System** | Receives: "Angel cleared" trigger — defined as all three Angel slots (Head/Body/Weapon) Inert | Angel System owns the Cleared definition; Win/Loss owns what happens when it fires. *(2026-05-27: Cleared = all 3 slots Inert, not all layers of one stack stripped.)* |
 | **Events System** | God card is always the last Event card in the deck. When God is cleared, Win/Loss receives the "Angel cleared" signal and resolves the win. Events System owns deck structure; Win/Loss owns the termination interpretation of that last card's clearing. |
 | **Angel System** | God is an Angel encounter using standard Integrity System rules. No God-specific win mechanics are needed — the "Angel cleared" signal is identical for God and other Angels. The semantic distinction is this GDD's responsibility: God cleared = session win; other Angel cleared = encounter win, continue play. |
 
@@ -131,7 +134,7 @@ The party wins if any number of boards remain active when God is cleared, includ
 **Bidirectional consistency notes**:
 - The **Integrity System** GDD already lists Win/Loss Conditions as a downstream dependent receiving "player board destroyed" and "Angel cleared." ✓ Consistent.
 - When the **Events System** GDD is authored, it must list Win/Loss Conditions as a dependency and reference the "God card is always last" requirement.
-- When the **Angel System** GDD is authored, it must note that the semantic distinction between "encounter win" (non-God Angel cleared) and "session win" (God cleared) is owned by this GDD, not the Angel System.
+- The **Angel System GDD** defines "Angel Cleared" as all three slots (Head/Body/Weapon) Inert. This GDD receives that trigger and owns the semantic distinction: God cleared = session win; non-God Angel cleared = encounter win, continue play. *(2026-05-27: Cleared definition updated to match new 3-slot architecture.)*
 
 ## Tuning Knobs
 
@@ -169,7 +172,7 @@ The party wins if any number of boards remain active when God is cleared, includ
 
 ---
 
-**AC-01** — GIVEN the party has stripped all of God's layers, WHEN the "Angel cleared" trigger fires for God at the end of Effect Resolution Phase (Check B), THEN the game state transitions to Won and no further actions resolve.
+**AC-01** — GIVEN all three slots (Head, Body, Weapon) of the God card Angel are Inert, WHEN the "Angel cleared" trigger fires for God at the end of Effect Resolution Phase (Check B), THEN the game state transitions to Won and no further actions resolve. *(2026-05-27: "Cleared" means all 3 slots Inert, not final layer of one stack stripped.)*
 
 **AC-02** — GIVEN any player's board has all 3 slots inert and no "Angel cleared" fired for God in the same phase, WHEN Check B runs, THEN the game state transitions to Lost and no further actions resolve.
 

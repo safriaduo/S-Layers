@@ -1,8 +1,8 @@
 # Item System
 
-> **Status**: In Design — CD-GDD-ALIGN: CONCERNS accepted (2026-05-25, 3 revisions applied: Rule 3 split-authority distribution, Tuning Knob 7 synergy scope boundary)
+> **Status**: In Design — CD-GDD-ALIGN: CONCERNS accepted (2026-05-25, 3 revisions applied: Rule 3 split-authority distribution, Tuning Knob 7 synergy scope boundary); design-review revisions applied 2026-05-28 (formula corrections, pool rebalance, rotation rule resolution)
 > **Author**: Federico Gallucci + Claude Code agents
-> **Last Updated**: 2026-05-25
+> **Last Updated**: 2026-05-28
 > **Implements Pillar**: The Build is Never Finished (primary); Combos Must Be Discoverable (secondary); Agency Over Dice (supporting)
 
 ## Overview
@@ -21,11 +21,11 @@ You are climbing through Heaven's machinery and you keep finding *things*.
 
 A tooth ripped from a creature that didn't belong here. A marker made from charcoal and certainty. A thorn from a plant that grows only where something was executed. You do not know what most of them mean. You bring them because leaving them behind is a second kind of erasure — something was here, it left a mark, and carrying the mark is how you witness it. When you slide one into the anchor on your armor, you are not upgrading. You are installing a testimony.
 
-The attachment is the act of misuse. Heaven designed that slot for a die. You are also putting a relic of unclear provenance in there, next to the die, and watching the layer change its mind about what it's for. The layer does not fight it. The layer is Heaven's equipment — built to be operated — and it doesn't know who is operating it or what they're running through its circuits. The finding goes in. Something changes. You do not announce it to the table. You wait for them to see.
+The attachment is the act of misuse. Heaven designed that slot for a die. You are also putting a relic of unclear provenance in there, next to the die, and watching the layer change its mind about what it's for. The layer does not fight it. The layer is Heaven's equipment — built to be operated — and it doesn't know who is operating it or what they're running through its circuits. The finding goes in. You call the zone aloud — the choice is the announcement. The rest of the table has not finished reading what you just said when you are already nodding.
 
-The moment they see is the moment you wanted.
+The moment of recognition is the moment you wanted.
 
-Not when the synergy fires — though that matters too. The moment is earlier: when someone across the table looks at your board and their expression shifts and they say *"wait — if that goes there while you still have the second layer—"* and you are nodding before they finish. You found something. You brought it. You installed it in the wrong place on purpose. The table is the witness. The broken build is the evidence.
+Not when the synergy fires — though that matters too. The moment is when you name the zone and the table starts decoding it in real time: someone says *"wait — if that goes there while you still have the second layer—"* and you are already nodding before they finish. You found something. You brought it. You named the zone out loud and let the table catch up. The announcement is the move. The broken build is the evidence.
 
 And then the layer goes. You absorb the hit because absorbing this specific hit was the correct move three turns ago when you decided it would be. The finding goes with the card. It is gone. It did its job — which was to make that layer into something Heaven didn't design. The receipt is face-down in the discard pile. The next layer comes up and the anchor is empty and you are already looking at the new card, figuring out which finding goes here next.
 
@@ -79,7 +79,9 @@ When an item enters play (from either channel), the following procedure resolves
 4. If the receiving player has no eligible zone (all zones inert or all zones already occupied by items), the item is discarded immediately without attaching. No departure trigger fires.
 5. If the First Player's own board already has items on all three zones, they must announce a different player as the recipient. They may not hold an item unassigned or give it to a player with no eligible zones.
 
-**Why split authority**: The First Player reads the party's board state to identify who benefits most from the item (cooperative board-read beat; Pillar 4). The receiving player reads their own board to choose the best zone (individual agency — the "findings" contract; Pillar 2). Together these decisions require two players to understand the current board without committee-style deliberation (Pillar 3). The First Player token rotates each encounter, ensuring the authority to assign distributes across the party over time.
+**Why split authority**: The First Player reads the party's board state to identify who benefits most from the item (cooperative board-read beat; Pillar 4). The receiving player reads their own board to choose the best zone (individual agency — the "findings" contract; Pillar 2). Together these decisions require two players to understand the current board without committee-style deliberation (Pillar 3). The First Player token rotates after each event card resolves (per Events System Rule 7), ensuring assignment authority distributes across the party over the session.
+
+**Consecutive self-assignment rule**: The First Player may not self-assign the current item if they received the most recently distributed item this session. If they would be the optimal recipient again, they must offer to another eligible player first; if no other player has an eligible zone, the self-assignment proceeds normally.
 
 ---
 
@@ -232,7 +234,7 @@ Items are not free additions. Every item attached to a zone contributes to that 
 **For Type 2 items (amplification)**: `E_item = p_c × k_bonus × T_active`
 - `p_c` = activation probability of the host zone (from E_slot lookup table in Equipment System)
 - `k_bonus` = the flat bonus value (`+k` in the item text)
-- `T_active` = expected turns this item is live (approximately 1/H_pt per layer ≈ 1.0 at MVP)
+- `T_active` = expected turns this item is live ≈ T_encounter / (H_pt × N_layers_per_zone) = 8 / (1.0 × 3) ≈ **2.67 turns** at MVP. Do not use the shorthand "1/H_pt" — that formula gives per-player hits, not per-zone active time.
 
 **For Type 3 items (threshold reduction)**: Compute new T_accum at the reduced threshold; the encounter output increase is approximately:
 
@@ -240,7 +242,7 @@ Items are not free additions. Every item attached to a zone contributes to that 
 
 This is a design-time calculation, not a table check. Card designers must verify combined S_encounter before any item goes to print.
 
-**Balance gate**: No item shall be approved for production if it pushes any single player's combined S_encounter (base set + all attached items at maximum reasonable attachment) above 85 (33% above T_target = 64). Items may be powerful; they may not be game-breaking.
+**Balance gate**: No item shall be approved for production if it pushes any single player's S_combined (base set + all attached items at maximum reasonable attachment) above 85 advisory, or above 110 hard gate (recalibrated against T_active ≈ 2.67). When evaluating multi-item scenarios, Type 1 + Type 2 same-zone combinations must be computed together — p_c changes from a Type 1 item multiply the Type 2 item's contribution. See Formula 3 for the interaction rule.
 
 ---
 
@@ -329,23 +331,23 @@ The `E_item` formula quantifies the per-turn output contribution of a Type 2 (Ou
 |---|---|---|---|---|
 | Host zone activation probability | p_c | float | (0.0, 1.0] | Probability the placed die meets the host zone's constraint. From E_slot lookup table (Equipment System Formula 1). Use the modified constraint if a Type 1 item is also present. |
 | Item bonus value | k_bonus | int | [1, 6] | The flat value `k` in the item text (`+k`). Additive only — no multiplicative items at MVP. |
-| Turns item is live | T_active | float | [0, T_encounter] | Expected turns this item remains attached. Approximately 1/H_pt per layer; at MVP (H_pt = 1.0): ≈ 1.0 turn per layer. Use the host layer's expected active duration from the S_layer formula (Equipment Degradation Formula 2). |
-| Item output contribution | E_item | float | [0, ~6] | Expected output added per turn by this item while attached. |
+| Turns item is live | T_active | float | [0.5, T_encounter] | Expected turns this item remains attached. Derived as T_encounter / (H_pt × N_layers_per_zone). At MVP (H_pt = 1.0, N_layers = 3, T_encounter = 8): T_active ≈ 8 / (1.0 × 3) ≈ **2.67 turns per layer**. Use this value for design-time calculations unless the host layer's specific active duration (from Equipment Degradation Formula 2) is available. |
+| Item output contribution | E_item | float | [0, ~16] | Expected encounter output contribution from this item = p_c × k_bonus × T_active. This is the encounter-level contribution, not a per-turn rate. |
 
-**Output Range:** 0 (item never activates or T_active = 0) to approximately 6 at `k_bonus = 6, p_c = 1.0, T_active = 1.0`.
+**Output Range:** 0 (item never activates or T_active = 0) to approximately 16 at `k_bonus = 6, p_c = 1.0, T_active = 2.67`.
 
-**Encounter contribution:** `E_item_encounter = E_item × T_active = p_c × k_bonus × T_active²`
+**Note on formula structure:** E_item is the complete encounter-level contribution (one multiplication by T_active). There is no separate "encounter contribution" step requiring a second T_active multiplication — that was a formula error in prior versions. Rate per turn while active = p_c × k_bonus; multiply once by T_active to get encounter contribution.
 
-At MVP (H_pt = 1.0, each layer active approximately 2.7 turns): an amplification item on a mid-layer zone contributes approximately `1.0 × k_bonus × 2.7` encounter output units.
+At MVP (T_active ≈ 2.67 turns per layer): an amplification item contributes approximately `p_c × k_bonus × 2.67` encounter output units.
 
 **Example — "+2 damage" item on a `[N≥4]` damage zone (mid-layer)**:
-- p_c = 0.75, k_bonus = 2, T_active = 2.7 turns
-- E_item = 0.75 × 2 × 1 = 1.5/turn (while active)
-- Encounter contribution = 1.5 × 2.7 = **4.05 units** added to S_encounter
+- p_c = 0.75, k_bonus = 2, T_active = 2.67 turns
+- Rate = 0.75 × 2 = 1.5 damage/turn while active
+- E_item = 0.75 × 2 × 2.67 = **4.0 units** added to S_encounter
 
-**Example — "+3 damage" item on an unconstrained zone (top layer, T_active ≈ 1.0)**:
-- p_c = 1.0, k_bonus = 3, T_active = 1.0
-- Encounter contribution = 1.0 × 3 × 1.0 = **3.0 units**
+**Example — "+3 damage" item on an unconstrained zone (T_active ≈ 2.67)**:
+- p_c = 1.0, k_bonus = 3, T_active = 2.67
+- E_item = 1.0 × 3 × 2.67 = **8.0 units**
 
 ---
 
@@ -394,10 +396,11 @@ The `S_combined` formula verifies that attaching items to a player's equipment s
 | Variable | Symbol | Type | Range | Description |
 |---|---|---|---|---|
 | Base set encounter output | S_encounter_base | float | [54, 74] | S_encounter of the equipment set without any items (Equipment System Formula 3). |
-| Amplification item contributions | Σ E_item_encounter(i) | float | [0, ~20] | Sum of encounter contributions from all Type 2 items attached (Formula 1). |
-| Threshold reduction deltas | Σ ΔS_threshold(j) | float | [0, ~15] | Sum of output deltas from all Type 3 items attached (Formula 2). |
-| Type 1 note | (implicit) | — | — | Constraint modification changes p_c — re-run E_slot with the modified constraint and recompute S_encounter_base. |
-| Type 4 note | (implicit) | — | — | Mutation does not change numeric value — only output type. No formula adjustment required. |
+| Amplification item contributions | Σ E_item(i) | float | [0, ~48] | Sum of encounter contributions from all Type 2 items attached (Formula 1). At 3 items with max values (p_c=1.0, k_bonus=6, T_active=2.67): max ≈ 3 × 16 = 48. Typical session values are substantially lower. |
+| Threshold reduction deltas | Σ ΔS_threshold(j) | float | [0, ~8] | Sum of output deltas from all Type 3 items attached (Formula 2). Practical max at realistic card values (E_effect ≤ 5) is ~4 units per item. |
+| Type 1 note | (implicit) | — | — | Constraint modification changes p_c — re-run E_slot with the modified constraint and recompute S_encounter_base. **Important:** if a Type 2 item is also attached to the same zone as a Type 1 item, re-run Formula 1 for the Type 2 item using the modified p_c. A Type 1 item that raises p_c from 0.33 to 1.0 multiplies the Type 2 item's E_item by ~3×. This interaction must be checked explicitly. |
+| Type 4 note | (implicit) | — | — | Mutation does not change numeric value — only output type. No formula adjustment required for S_combined. Check D_agg separately (see Edge Cases, Type 4). |
+| Restoration item note | (implicit) | — | — | Restoration trigger items (departure trigger: restore k Integrity) contribute 0 to S_combined. Track expected session restoration separately: E_restore ≈ P_strip × k_restore. |
 | Combined encounter output | S_combined | float | — | Total expected encounter output with all attached items. |
 
 **Balance gates:**
@@ -406,12 +409,18 @@ The `S_combined` formula verifies that attaching items to a player's equipment s
 |---|---|---|
 | Lower bound | S_combined ≥ 54 | Items should not reduce output. Net-negative items are misdesigns. |
 | Advisory | S_combined ≤ 85 | Any single player's combined output above 85 triggers design review. |
-| Hard production gate | S_combined ≤ 105 | Above 105: item combination is degenerate. Redesign the item or remove from pool. |
+| Hard production gate | S_combined ≤ 110 | Above 110: item combination is degenerate. Redesign the item or remove from pool. Recalibrated from 105 against corrected T_active ≈ 2.67. |
+
+**Type 1 + Type 2 same-zone example** (the highest-risk two-item interaction):
+- Zone with p_c_base = 0.33 ([N≥5] constraint), Type 1 item raises to p_c = 1.0, Type 2 item has k_bonus = 4
+- Without Type 1: E_item(Type 2) = 0.33 × 4 × 2.67 = 3.5 units
+- With Type 1 on same zone: E_item(Type 2) = 1.00 × 4 × 2.67 = 10.7 units — a 3× multiplier
+- Both items must be evaluated together; Formula 1 alone on the Type 2 item gives the wrong result if p_c has changed
 
 **Example — Pilgrim starting set (S_encounter_base ≈ 65) with two items attached**:
-- Item 1 (Type 2, +2 damage on Weapon, p_c = 1.0, T_active ≈ 2.7): E_item_encounter = 5.4 units
+- Item 1 (Type 2, +2 damage on Weapon, p_c = 1.0, T_active ≈ 2.67): E_item = 1.0 × 2 × 2.67 = 5.3 units
 - Item 2 (Type 3, threshold −4 on Accumulate 8 Heal zone, ΔS ≈ 0.3 units)
-- S_combined = 65 + 5.4 + 0.3 = **70.7** — within advisory range ✓
+- S_combined = 65 + 5.3 + 0.3 = **70.6** — within advisory range ✓
 
 ---
 
@@ -419,19 +428,22 @@ The `S_combined` formula verifies that attaching items to a player's equipment s
 
 Not a runtime formula. A design allocation tool confirming the 10-item pool delivers meaningful choices across modifier types.
 
-**Recommended MVP pool allocation:**
+**Revised MVP pool allocation (11 items):**
 
-| Modifier Type | Count | Rationale |
+| Item Type | Count | Rationale |
 |---|---|---|
-| Type 1 — Constraint Modification | 4 | Broadly applicable; useful at any point in the session before the player knows their layer progression |
+| Type 1 — Constraint Modification | 3 | Broadly applicable; reduced from 4 to limit type glut and make room for Type 4 and Restoration entries |
 | Type 2 — Output Amplification | 3 | Most valuable when the player knows their build direction; arrives mid-session |
 | Type 3 — Threshold Reduction | 2 | High-synergy with Accumulate zones; rarity prevents runaway threshold stacking |
-| Type 4 — Effect Type Mutation | 1 | The broken-build item; rare by count for feel; ~40% session appearance rate at MVP draw rate |
-| **Total** | **10** | — |
+| Type 4 — Effect Type Mutation | 2 | The broken-build item; 2 copies with different mutation targets (e.g., Damage→Healing and Damage→Accumulate-credit); session appearance rate ~62% at 4 draws from 11-item pool |
+| Restoration — Departure Trigger Heal | 1 | Addresses recovery deficit (B-REST-1). Text: "When this item is removed, restore 2 Integrity." Departure trigger per Rule 6 — fires at layer strip, before new layer reveal. Does not count toward S_combined; provides ~2 Integrity resilience per strip event. |
+| **Total** | **11** | — |
 
-**Expected session distribution**: 4 items drawn on average (3 treasure events + 1 post-combat reward). At 4 draws from a shuffled 10-item pool: ~2 Type 1, ~1 Type 2, ~1 Type 3 expected; mutation item appears in ~40% of sessions.
+**Restoration item balance note**: The two Type 4 items must be distinct — identical mutation targets produce duplicate plays. Recommended pair: one mutates Damage→Integrity restore; one mutates Damage→Accumulate credit (feeding a target zone's running total). The restoration departure-trigger item and the Type 4 Damage→Healing mutation are two different healing vectors; having both ensures at least one healing path in most sessions.
 
-**Tuning lever**: See Tuning Knob 4. More Type 1 → more accessible game. More Type 4 → broken-build moment more common and less special.
+**Expected session distribution**: 4 items drawn on average (3 treasure events + 1 post-combat reward). At 4 draws from a shuffled 11-item pool (hypergeometric): ~1.1 Type 1, ~1.1 Type 2, ~0.7 Type 3, ~0.7 Type 4, ~0.4 Restoration per session. At least one Type 4 appears in ~62% of sessions (up from ~40% at 1/10). Restoration item appears in ~36% of sessions.
+
+**Tuning lever**: See Tuning Knob 4. More Type 1 → more accessible game. More Type 4 → broken-build moments more common. More Restoration → more survivability; lowers tension of the loss-of-resources arc.
 
 ## Edge Cases
 
@@ -441,7 +453,7 @@ Not a runtime formula. A design allocation tool confirming the 10-item pool deli
 
 **If an item is drawn but no eligible anchor zone exists on any player board** (all zones either inert or already occupied by items): the item is discarded immediately without attaching. The Distribution Procedure ends with no placement. This is distinct from pool exhaustion — an item was revealed and goes face-up, but finds no legal home. It enters the discard pile without triggering a departure event (it never attached).
 
-**If both a treasure event (Channel A) and a post-combat reward (Channel B) trigger in the same moment when exactly one item remains in the pool**: the First Player announces which channel draws first. That draw receives the item and the Distribution Procedure executes normally. The second channel's draw finds an empty pool and produces nothing. This decision is immediate — no extended discussion.
+**If both a treasure event (Channel A) and a post-combat reward (Channel B) trigger in the same moment when exactly one item remains in the pool**: Channel B (post-combat reward) always draws first. That draw receives the item and the Distribution Procedure executes normally. Channel A's draw finds an empty pool and produces nothing. Channel B takes priority because the post-combat reward is a guaranteed contract; treasure events are opportunistic. No discussion or First Player decision is required.
 
 **If the First Player's board has items on all three zones** (no eligible zones for themselves): they must assign the drawn item to another player's eligible zone. They may not hold the item unassigned or pass to a player who also has all zones occupied. If no other player has an eligible zone, the item is discarded (per the "no eligible anchor" rule above).
 
@@ -501,6 +513,8 @@ Not a runtime formula. A design allocation tool confirming the 10-item pool deli
 
 **If the same layer is stripped by two events in one turn** and an item is attached: the item departs at step 3 of the first strip event. The second strip event targets an already-inert zone — the item has already departed. The departure trigger fires once, at the first strip only.
 
+**If a departure trigger fires an offensive effect (damage to the Angel) when no Angel is present in the Angel Zone** (e.g., during a Bad Event, or at session end — see Rule 6.1 for context): the trigger fires and is consumed — the departure is complete and the item is removed — but the offensive damage fizzles. No damage is applied, no integrity is lost, and no target is resolved. This is distinct from combat context, where a valid Angel target always exists. *(Rationale: departure triggers are written with combat context as the default. A trigger that fires outside combat has the same "fires unconditionally" timing but the damage effect has no legal target in a no-Angel context. The effect is discarded; the departure is not.)*
+
 ---
 
 ### Balance Formula Edge Cases
@@ -538,11 +552,11 @@ Not a runtime formula. A design allocation tool confirming the 10-item pool deli
 
 **1. Item Pool Size (total item card count)**
 - **Adjusts**: Total items available in a session; how often items influence the build
-- **Current value**: 10 items at MVP
-- **Safe range**: 8–15
-- **Too low (< 8)**: Pool exhausts in fewer encounters; post-Angel rewards produce nothing late-session
+- **Current value**: 11 items at MVP
+- **Safe range**: 10–15
+- **Too low (< 10)**: Pool exhausts before late encounters; post-Angel rewards produce nothing in 4-player sessions; restoration and Type 4 items disappear too quickly
 - **Too high (> 15)**: Items feel less special; attachment decisions become bureaucratic
-- **Interaction**: Changing pool size changes zone fill rate (~67% at 10 items, 4 draws per session). Recalibrate if T_encounter or session length changes.
+- **Interaction**: At 11 items and 4 expected draws, zone fill rate ≈ 67% in a 2-player game (4 items / 6 zones). Recalibrate if T_encounter or player count scaling changes.
 
 **2. Treasure Events in the Event Deck (Channel A acquisition rate)**
 - **Adjusts**: How often items enter play from treasure events; pacing of item-build evolution
@@ -560,14 +574,15 @@ Not a runtime formula. A design allocation tool confirming the 10-item pool deli
 - **At 2**: More items than zones in multi-Angel sessions; items become common rather than found
 - **Do not change** without recalibrating total expected items and zone fill rate
 
-**4. Item Pool Modifier Type Allocation (mix of 4 types)**
+**4. Item Pool Modifier Type Allocation (mix of types)**
 - **Adjusts**: What kinds of items the party sees; gameplay feel without changing item count
-- **Current value**: 4 constraint / 3 amplification / 2 threshold / 1 mutation (Formula 4)
-- **More Type 1**: More accessible; more zones fire more often
-- **More Type 2**: Output spikes more common; requires S_combined monitoring
-- **More Type 3**: Accumulate synergies more frequent
-- **More Type 4**: Broken-build moments more common but less special; mutation rarity reduced
-- **Interaction**: Keep at least 1 of each type. Dropping any type to 0 removes that modifier category from the session experience.
+- **Current value**: 3 constraint / 3 amplification / 2 threshold / 2 mutation / 1 restoration = 11 items (Formula 4)
+- **More Type 1**: More accessible; more zones fire more often; reduces time spent with no useful attachment option
+- **More Type 2**: Output spikes more common; requires careful S_combined monitoring (especially with Type 1 same-zone stacking)
+- **More Type 3**: Accumulate synergies more frequent; rewards players who build toward Accumulate zones
+- **More Type 4**: Broken-build moments more common; below 2 copies, reliability drops sharply (1 copy = ~40% session rate)
+- **More Restoration**: More survivability; weakens the loss-of-resources pressure arc
+- **Interaction**: Keep at least 1 of each type. Dropping any type to 0 removes that modifier category from the session experience. The Restoration item should always remain at ≥1 to maintain the recovery vector (B-REST-1).
 
 **5. Maximum Items Per Player Board**
 - **Current value**: 3 (structural — one per zone)
@@ -626,7 +641,7 @@ Not a runtime formula. A design allocation tool confirming the 10-item pool deli
 
 **IS-AC-06** *(BLOCKING)* — GIVEN the First Player's board has items on all three zones (no eligible anchor zones), WHEN an item is acquired, THEN the First Player must announce another player as the recipient; they may not keep the item unassigned or nominate themselves. The announced player then chooses their zone. If no other player has an eligible zone, IS-AC-05a or IS-AC-05b applies.
 
-**IS-AC-07** *(BLOCKING)* — GIVEN both a treasure event (Channel A) and an Angel defeat (Channel B) trigger simultaneously when exactly one item remains in the pool, WHEN the First Player resolves acquisition, THEN the First Player announces which channel draws first; that channel draws the item via the normal Distribution Procedure; the second channel's draw produces no item.
+**IS-AC-07** *(BLOCKING)* — GIVEN both a treasure event (Channel A) and an Angel defeat (Channel B) trigger simultaneously when exactly one item remains in the pool, WHEN the simultaneous acquisition resolves, THEN Channel B draws first (no announcement or decision required); Channel B receives the item via the normal Distribution Procedure; Channel A's draw produces no item.
 
 ---
 
@@ -675,7 +690,7 @@ Not a runtime formula. A design allocation tool confirming the 10-item pool deli
 
 **IS-AC-20** *(BLOCKING)* — GIVEN a Type 4 mutation item changes a zone from damage to healing, WHEN the zone's effect fires, THEN the output is healing equal to the numeric formula result (e.g., base effect `Deal [N] damage` with N=4 → `Restore 4 Integrity`). The numeric formula is unchanged; only the output type noun changes.
 
-**IS-AC-21** *(ADVISORY)* — GIVEN a Type 4 mutation converts a damage zone to healing, WHEN the mutation is attached and party combat output is reviewed, THEN D_agg (expected party damage per turn) is reduced by the zone's E_slot value. Verify that `party_D_agg ≥ Angel_HP_layer / T_encounter` remains satisfied after the mutation.
+**IS-AC-21** *(DEFERRED — pending Combat System GDD)* — GIVEN a Type 4 mutation converts a damage zone to healing, WHEN the mutation is attached, THEN D_agg (expected party damage per turn) is reduced by the zone's E_slot value. Verify that `party_D_agg ≥ Angel_HP_layer / T_encounter` remains satisfied. **Blocked on:** `Angel_HP_layer` and the `D_agg` computation procedure are undefined until the Combat System GDD is authored. Reclassify to ADVISORY when those inputs are available.
 
 **IS-AC-22** *(ADVISORY)* — GIVEN a Type 4 mutation item changes a zone to `Accumulate credit to [target zone]`, WHEN the zone fires, THEN the output is added to the target Accumulate zone's running total (not dealt as damage); the target zone's threshold check executes normally at its next Effect Resolution evaluation.
 
@@ -695,15 +710,17 @@ Not a runtime formula. A design allocation tool confirming the 10-item pool deli
 
 ### Balance Constraint — Formula Criteria (Rule 7, Formulas 1–3)
 
-**IS-AC-27** *(BLOCKING — unit test required)* — GIVEN a Type 2 item with k_bonus=2 on a zone with p_c=0.75 (`[N≥4]` constraint) and T_active=2.7 turns, WHEN E_item_encounter is computed using Formula 1, THEN the result = 0.75 × 2 × 2.7 = **4.05 encounter-output units** (±0.05 tolerance).
+**IS-AC-27** *(BLOCKING — design-time calculation required)* — GIVEN a Type 2 item with k_bonus=2 on a zone with p_c=0.75 (`[N≥4]` constraint) and T_active=2.67 turns (MVP value), WHEN E_item is computed using Formula 1, THEN the result = 0.75 × 2 × 2.67 = **4.0 encounter-output units** (±0.1 tolerance). *Test artifact: reproduce this calculation in the item design spreadsheet (column: E_item) before card production approval.*
 
-**IS-AC-28** *(BLOCKING — unit test required)* — GIVEN a Type 3 item (k=4) on an `Accumulate 12: Restore 1 Integrity` zone (E_effect=1, T_encounter=8), WHEN ΔS_threshold is computed using Formula 2, THEN: T_accum_base = 12/2.275 ≈ 5.27; T_accum_new = 8/2.275 ≈ 3.52; ΔS_threshold = 1 × (8/3.52 − 8/5.27) ≈ **0.75 units** (±0.05 tolerance).
+*Note on 2.275 (Formula 2):* This constant is the mean accumulation-per-turn rate derived from the 2D6 dice distribution (Dice Economy). Source: Dice Economy GDD Formula 2. Card designers must verify this value against the Dice Economy GDD before computing ΔS_threshold.
 
-**IS-AC-29** *(BLOCKING — unit test required)* — GIVEN S_encounter_base=65, E_item_encounter sum=5.4 (from IS-AC-27), ΔS_threshold sum=0.3, WHEN S_combined is computed using Formula 3, THEN S_combined = **70.7** — within the advisory range (≤85). Pass.
+**IS-AC-28** *(BLOCKING — design-time calculation required)* — GIVEN a Type 3 item (k=4) on an `Accumulate 12: Restore 1 Integrity` zone (E_effect=1, T_encounter=8), WHEN ΔS_threshold is computed using Formula 2 (2.275 from Dice Economy), THEN: T_accum_base = 12/2.275 ≈ 5.27; T_accum_new = 8/2.275 ≈ 3.52; ΔS_threshold = 1 × (8/3.52 − 8/5.27) ≈ **0.75 units** (±0.05 tolerance). *Test artifact: reproduce in item design spreadsheet.*
 
-**IS-AC-30** *(BLOCKING — design gate)* — GIVEN a proposed item combination where S_combined = 91 for a player (S_encounter_base=74 + items=17), WHEN S_combined is evaluated at card design time, THEN the combination triggers an advisory design review flag; the item(s) must be reviewed before production approval.
+**IS-AC-29** *(BLOCKING — design-time calculation required)* — GIVEN S_encounter_base=65, E_item sum=4.0 (from IS-AC-27 corrected), ΔS_threshold sum=0.3, WHEN S_combined is computed using Formula 3, THEN S_combined = 65 + 4.0 + 0.3 = **69.3** — within the advisory range (≤85). Pass.
 
-**IS-AC-31** *(BLOCKING — design gate)* — GIVEN a proposed item combination where S_combined = 108 for a player, WHEN S_combined is evaluated at card design time, THEN the combination is blocked from production (hard gate: S_combined > 105); the item must be redesigned or removed from the pool.
+**IS-AC-30** *(BLOCKING — design gate)* — GIVEN a proposed item combination where S_combined = 91 for a player (S_encounter_base=74 + items=17), WHEN S_combined is evaluated at card design time using Formula 3, THEN the combination triggers an advisory design review flag; the item(s) must be reviewed before production approval. *Evaluate Type 1 + Type 2 same-zone combinations explicitly — the compounding p_c effect must be computed, not just individual item values.*
+
+**IS-AC-31** *(BLOCKING — design gate)* — GIVEN a proposed item combination where S_combined = 112 for a player, WHEN S_combined is evaluated at card design time, THEN the combination is blocked from production (hard gate: S_combined > 110; recalibrated from 105 against corrected T_active ≈ 2.67); the item must be redesigned or removed from the pool.
 
 ---
 
@@ -713,14 +730,26 @@ Not a runtime formula. A design allocation tool confirming the 10-item pool deli
 
 **IS-AC-33** *(BLOCKING — production gate)* — GIVEN any item card entering the production pipeline, WHEN a reviewer checks the card for forbidden modifier forms, THEN none of the following appear: multiplicative amplification (`×k`), Accumulate-to-immediate conversion, immediate-to-Accumulate conversion, constraint indicator type change, target expansion (self → party), or `N` modification before it is read by the effect formula. A card with any forbidden form is a hard production block.
 
-**IS-AC-34** *(ADVISORY — production gate)* — GIVEN the 10-item MVP pool at final composition, WHEN the modifier types are counted, THEN the pool contains 4 Type 1, 3 Type 2, 2 Type 3, and 1 Type 4 items (or an approved variant recorded in Tuning Knob 4). Any deviation from the approved composition is flagged for producer review before print.
+**IS-AC-34** *(ADVISORY — production gate)* — GIVEN the 11-item MVP pool at final composition, WHEN the modifier types are counted, THEN the pool contains 3 Type 1, 3 Type 2, 2 Type 3, 2 Type 4, and 1 Restoration item (or an approved variant recorded in Tuning Knob 4 with the approval date). Any deviation from the approved composition is flagged for producer review before print.
+
+---
+
+### Coverage Gaps — Additional Criteria
+
+**IS-AC-35** *(BLOCKING)* — GIVEN a zone has one item attached with **no departure trigger**, WHEN the host layer is stripped during play, THEN the item is removed at step 3 of the Layer Reveal Procedure; no trigger effect fires; the item enters the discard pile; the zone's anchor is now empty and eligible for a new item if a new layer is revealed.
+
+**IS-AC-36** *(BLOCKING)* — GIVEN a die is committed to a zone during Placement Phase AND that zone's layer is stripped before the die resolves (triggering item departure), WHEN the strip event resolves, THEN the placed die fizzles (is consumed without effect per Equipment System Rule 5.6); the departure trigger fires normally at step 3 if one is present; the die result does not apply to the zone's effect.
+
+**IS-AC-37** *(BLOCKING)* — GIVEN a Type 3 (threshold-reduction) item is attached to a zone **without the Accumulate keyword**, WHEN game turns advance while the item is attached, THEN the item's modifier has no gameplay effect (there is no threshold to reduce); the item occupies the anchor, departs with the layer normally, and its departure trigger fires (if any); no error condition occurs and no player action is required.
+
+**IS-AC-38** *(ADVISORY)* — GIVEN an item is currently attached to an active zone, WHEN a player attempts to voluntarily detach the item (not through a layer strip event), THEN the action is illegal; the item remains attached; no game-state change occurs. Voluntary detachment is not a legal action at any point in the session.
 
 ## Open Questions
 
 | ID | Question | Owner | Priority |
 |---|---|---|---|
 | OQ-1 | How many items should the Events System generate across a full session at production scope (full 50-card event deck)? The MVP calibration (3 treasure events) was set for a 15-card deck. The rate may need to scale differently with deck size. | Item System + Events System co-authoring | MEDIUM |
-| OQ-2 | What is the First Player token rotation rule? The distribution mechanism relies on it rotating each encounter, but no GDD currently defines this rule. It must be defined in either the Combat System or Game Setup GDD. | Combat System or Game Setup | HIGH |
+| OQ-2 | ~~What is the First Player token rotation rule?~~ **RESOLVED 2026-05-28**: Per-card rotation is authoritative (events-system.md Rule 7 — token rotates after each event card resolves, including treasure events). Rule 3 rationale updated to reflect this. events-system.md is the authoritative source; item-system.md references it. | — | CLOSED |
 | OQ-3 | Can post-combat item rewards be drawn after a Boss defeat (God card)? The Boss is the last card — the session ends on defeat or win. If the party defeats the God card, is there a post-combat reward before the session-end? | Events System + Item System | LOW |
 | OQ-4 | Should MVP synergistic pairs be documented explicitly in the item design sheet before card production begins? The three confirmed synergy types (item + Accumulate layer, item + constraint layer, item + passive on-destroy) need three specific card designs that instantiate them. | Card designer + Item System | HIGH |
 | OQ-5 | At what point in the session does the item pool visibly deplete to signal scarcity to players? Should there be a physical indicator (e.g., a small counter or marker) for items remaining, or is the face-down pile's thinness sufficient? | Art Director + Game Setup | LOW |

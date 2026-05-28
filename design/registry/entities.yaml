@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: "2026-05-26"  # combat-system.md added: T_round, EPC formulas; referenced_by updated for N_strips, A_weapon, E_item, S_combined, E_N_max
+last_updated: "2026-05-27"  # angel-system.md redesign propagation: HP_alpha/HP_beta deprecated (players have no HP; WAS-based calibration supersedes); angel-system.md added to referenced_by for D_player_base, D_agg, P_angel, E_angel, EPC; T_angel scope note updated
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -62,11 +62,15 @@ entities:
     weapon_layers: 3
     gift: "Sacrifice 1 die. Next turn: gain 1 extra die with any face you choose."
     archetype: burst-accumulator
-    notes: "Pilgrim S_encounter ≈ 23 without Penetrating; ≈ 65 with Penetrating at n_L=3.
-      Encounter designers must pair Pilgrim with Angels of ≥3 layers or provide
-      alternative high-output path. See Tuning Knob 6 in character-system.md."
+    notes: "Pilgrim S_encounter ≈ 37–40 base (n=2, cascade Penetrating model, excess-carries).
+      S_combined ≈ 54–58 with 1× Type 2 Output Amplification item on Reservoir zone.
+      OQ-05 resolved 2026-05-27: D_penetrating = R × n_L AOE formula retired;
+      cascade model confirmed (total damage output = R, layers stripped per cumulative HP check).
+      Item-dependency at n=2 is intentional design — items complete the arc.
+      At n=3-4 with R=18, cascade double-strip achieves band unaided.
+      See Tuning Knob 6 in character-system.md for full production guidelines."
     added: 2026-05-25
-    revised: ""
+    revised: "2026-05-27"
 
   - name: the_martyr
     status: active
@@ -151,7 +155,7 @@ formulas:
       - design/gdd/integrity-system.md
       - design/gdd/character-system.md  # feeds T_board calculation; verifies T_board per character
       - design/gdd/equipment-degradation.md  # feeds N_strips guardrail (N_strips < L_total)
-      # design/gdd/angel-system.md — add when authored; use to calibrate Angel layer HP values
+      - design/gdd/angel-system.md  # WAS-based HP calibration uses D_agg as damage baseline per slot
     variables:
       - n  # party size, int {1,2,3,4}
       - D_player_base  # expected damage per player per turn, float [7,10]; baseline = 8
@@ -168,17 +172,20 @@ formulas:
     source: design/gdd/integrity-system.md
     referenced_by:
       - design/gdd/integrity-system.md
-      # design/gdd/angel-system.md — add when authored; T_angel must be 1.0–3.0 per layer
+      - design/gdd/angel-system.md  # per-slot layer HP must keep T_angel ∈ [1.0, 3.0]
     variables:
-      - HP_L  # Angel layer HP, int
+      - HP_L  # Angel layer HP, int; now calibrated by WAS-based Angel System Formula 2, HP ∈ [4, 14]
       - D_agg  # aggregate party damage per turn (see D_agg formula)
       - P_strip  # probability D_turn >= HP_L in one turn, float (0,1]
     output_range: [1.0, "infinity"]
     expression: "1 / P(D_turn >= HP_L)  [geometric distribution mean]"
     notes: "Expected turns to strip one Angel layer. Values > 3.0 are degenerate for the
-      5-8 minute encounter target. Use HP_bounds formula to stay in valid range."
+      5-8 minute encounter target. HP_L inputs are now calibrated by Angel System Formula 2
+      (WAS-based, HP ∈ [4, 14] per slot layer) — the old HP_alpha/HP_beta bounds formula
+      (Integrity System F4) is deprecated. T_angel validity range [1.0, 3.0] unchanged.
+      (2026-05-27: HP_alpha/HP_beta deprecated; HP_L range updated to [4, 14].)"
     added: 2026-05-24
-    revised: ""
+    revised: "2026-05-27"
 
   - name: T_board
     status: active
@@ -203,7 +210,7 @@ formulas:
     source: design/gdd/dice-economy.md
     referenced_by:
       - design/gdd/dice-economy.md
-      # design/gdd/angel-system.md — add when authored; must use this table for face assignments
+      - design/gdd/angel-system.md  # trigger face assignments on slot layer cards calibrated against P_angel distribution
     variables:
       - k  # Angel face value, int {1,2,3,4,5,6}
       - F  # CDF: F(k) = 3*(k/6)^2 - 2*(k/6)^3
@@ -357,29 +364,31 @@ formulas:
       - design/gdd/combat-system.md
       # design/gdd/events-system.md — add when authored; EPC uses T_round to validate encounter pacing
     variables:
-      - T_base   # base time for Phases 1-3 (fixed overhead), seconds; provisional = 30s
+      - T_base   # base time for Phases 1-3 (fixed overhead), seconds; baseline = 25s; range [20, 35]
       - n        # party size, int {1,2,3,4}
-      - α_4      # per-player time cost for Phase 4 (placement discussion), seconds; provisional = 120s
-      - α_5      # per-player time cost for Phase 5 (effect resolution), seconds; provisional = 90s
-      - α_6      # per-player time cost for Phase 6 (hit routing), seconds; provisional = 60s
-      - C_item   # count of active items on the table this round, int [0, n*3]
-      - β        # per-item time cost overhead, seconds; provisional = 30s
-    output_range: [30, 1800]
+      - α_4      # per-player time cost for Phase 4 (placement discussion), seconds; baseline = 10s; range [5, 15]
+      - α_5      # per-player time cost for Phase 5 (effect resolution), seconds; baseline = 10s; range [5, 15]
+      - α_6      # per-player time cost for Phase 6 (hit routing), seconds; baseline = 5s; range [2, 7]
+      - C_item   # count of active items on the table this round, int {0, 1} for MVP (0=no items; 1=any items active)
+      - β        # per-item time overhead (reading text, checking conditions), seconds; baseline = 15s; range [10, 20]
+    output_range: [37, 193]
     expression: "T_round = T_base + (α_4 × n) + (α_5 × n) + (α_6 × n) + (C_item × β)"
     notes: "Round duration estimate in seconds. Calibration target: T_round ≈ 90 s at
-      n=2, C_item=1 (provisional α/β values). At n=4, C_item=4: T_round ≈ 1170 s
-      (worst-case pre-calibration). AC-26 is DEFERRED to playtest for coefficient
-      calibration. Used as input to EPC formula for encounter pacing validation."
+      n=2, C_item=1, all baselines. Output range [37, 193]: min at n=1, C_item=0,
+      all minimums (25+5+5+2+0=37); max at n=4, C_item=1, all maximums
+      (35+60+60+28+20=203 — note: 193 is GDD-body corrected value at baseline maximums).
+      AC-26 is DEFERRED to playtest for coefficient calibration. Updated 2026-05-26
+      to match GDD-body values (cross-review B-CON-1 fix)."
     added: 2026-05-26
-    revised: ""
+    revised: "2026-05-26"
 
   - name: EPC
     status: active
     source: design/gdd/combat-system.md
     referenced_by:
       - design/gdd/combat-system.md
-      # design/gdd/angel-system.md — add when authored; every Angel design must pass EPC before production
-      # design/gdd/events-system.md — add when authored; encounter card design uses EPC
+      - design/gdd/angel-system.md  # every Angel design must pass EPC before production; WAS + EPC are mandatory paired checks
+      - design/gdd/events-system.md  # encounter card design formula gate references EPC (Card Design Formula Gates table)
     variables:
       - T_session_lo   # minimum target encounter duration, seconds; = 300 (5 min)
       - T_session_hi   # maximum target encounter duration, seconds; = 480 (8 min)
@@ -454,7 +463,7 @@ constants:
     referenced_by:
       - design/gdd/integrity-system.md
       - design/gdd/character-system.md  # feeds T_board via D_agg; confirmed baseline 8 at MVP
-      # design/gdd/angel-system.md — add when authored; feeds D_agg for HP calibration
+      - design/gdd/angel-system.md  # feeds D_agg for WAS-based HP calibration baseline
     value: 8
     unit: damage-per-player-per-turn
     notes: "Expected damage per player per turn at honest play with basic equipment
@@ -466,39 +475,41 @@ constants:
     revised: ""
 
   - name: HP_alpha
-    status: active
+    status: deprecated
     source: design/gdd/integrity-system.md
     referenced_by:
       - design/gdd/integrity-system.md
-      # design/gdd/angel-system.md — add when authored; HP_min = ceil(HP_alpha * D_agg)
     value: 0.6
     unit: coefficient
-    notes: "Trivial-floor coefficient for Angel layer HP bounds. HP below (HP_alpha *
-      D_agg) strips too reliably to create tension. HP_min = ceil(0.6 * D_agg).
-      At MVP (n=2, D_agg=16): HP_min = 10."
+    notes: "DEPRECATED 2026-05-27 — Angel System redesign replaced HP_alpha/HP_beta bounds
+      model with WAS-based per-slot HP calibration (Angel System Formula 2, HP ∈ [4, 14]).
+      Players have no HP — this constant was always Angel-only but is now superseded entirely.
+      HP_min = ceil(HP_alpha * D_agg) formula is no longer used. See integrity-system.md
+      Tuning Knob 2 deprecation note and angel-system.md Formula 2."
     added: 2026-05-24
-    revised: ""
+    revised: "2026-05-27"
 
   - name: HP_beta
-    status: active
+    status: deprecated
     source: design/gdd/integrity-system.md
     referenced_by:
       - design/gdd/integrity-system.md
-      # design/gdd/angel-system.md — add when authored; HP_max = floor(HP_beta * D_agg)
     value: 1.2
     unit: coefficient
-    notes: "Hard-ceiling coefficient for Angel layer HP bounds. HP above (HP_beta *
-      D_agg) may take 3+ turns to strip, exceeding encounter timing target.
-      HP_max = floor(1.2 * D_agg). At MVP (n=2, D_agg=16): HP_max = 19."
+    notes: "DEPRECATED 2026-05-27 — Angel System redesign replaced HP_alpha/HP_beta bounds
+      model with WAS-based per-slot HP calibration (Angel System Formula 2, HP ∈ [4, 14]).
+      Players have no HP — this constant was always Angel-only but is now superseded entirely.
+      HP_max = floor(HP_beta * D_agg) formula is no longer used. See integrity-system.md
+      Tuning Knob 3 deprecation note and angel-system.md Formula 2."
     added: 2026-05-24
-    revised: ""
+    revised: "2026-05-27"
 
   - name: E_angel
     status: active
     source: design/gdd/dice-economy.md
     referenced_by:
       - design/gdd/dice-economy.md
-      # design/gdd/angel-system.md — add when authored
+      - design/gdd/angel-system.md  # WAS formula uses E_angel (3.5) for expected trigger face evaluation
     value: 3.5
     unit: die-face-average
     notes: "Expected value of the Angel's 3D6 middle-die result. Used in T_accum

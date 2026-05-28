@@ -22,15 +22,15 @@ S-Layers is a cooperative board game built on five interlocking rule modules: di
 | # | System Name | Category | Priority | Status | Design Doc | Depends On |
 |---|-------------|----------|----------|--------|------------|------------|
 | 1 | Dice Economy | Foundation | MVP | Designed | [design/gdd/dice-economy.md](dice-economy.md) | — |
-| 2 | Integrity System | Foundation | MVP | Designed | [design/gdd/integrity-system.md](integrity-system.md) | — |
-| 3 | Win/Loss Conditions | Foundation | MVP | Designed | [design/gdd/win-loss-conditions.md](win-loss-conditions.md) | — |
-| 4 | Equipment System | Core | MVP | Designed | [design/gdd/equipment-system.md](equipment-system.md) | Dice Economy |
-| 5 | Angel System | Core | MVP | Designed | [design/gdd/angel-system.md](angel-system.md) | Dice Economy, Integrity System |
-| 6 | Character System | Core | MVP | Designed | [design/gdd/character-system.md](character-system.md) | Equipment System, Dice Economy |
-| 7 | Equipment Degradation | Core | MVP | Designed | [design/gdd/equipment-degradation.md](equipment-degradation.md) | Equipment System, Integrity System |
-| 8 | Combat System | Feature | MVP | **Approved** | [design/gdd/combat-system.md](combat-system.md) | Dice Economy, Integrity System, Equipment System, Equipment Degradation, Character System, Angel System |
-| 9 | Item System | Feature | MVP | Designed | [design/gdd/item-system.md](item-system.md) | Equipment System, Equipment Degradation |
-| 10 | Events System | Feature | Vertical Slice | Designed | [design/gdd/events-system.md](events-system.md) | Combat System, Item System, Win/Loss Conditions |
+| 2 | Integrity System | Foundation | MVP | Needs Revision | [design/gdd/integrity-system.md](integrity-system.md) | — |
+| 3 | Win/Loss Conditions | Foundation | MVP | Needs Revision | [design/gdd/win-loss-conditions.md](win-loss-conditions.md) | — |
+| 4 | Equipment System | Core | MVP | Needs Revision | [design/gdd/equipment-system.md](equipment-system.md) | Dice Economy |
+| 5 | Angel System | Core | MVP | Needs Revision | [design/gdd/angel-system.md](angel-system.md) | Dice Economy, Integrity System |
+| 6 | Character System | Core | MVP | Needs Revision | [design/gdd/character-system.md](character-system.md) | Equipment System, Dice Economy |
+| 7 | Equipment Degradation | Core | MVP | Needs Revision | [design/gdd/equipment-degradation.md](equipment-degradation.md) | Equipment System, Integrity System |
+| 8 | Combat System | Feature | MVP | Needs Revision | [design/gdd/combat-system.md](combat-system.md) | Dice Economy, Integrity System, Equipment System, Equipment Degradation, Character System, Angel System |
+| 9 | Item System | Feature | MVP | Approved | [design/gdd/item-system.md](item-system.md) | Equipment System, Equipment Degradation |
+| 10 | Events System | Feature | Vertical Slice | Needs Revision | [design/gdd/events-system.md](events-system.md) | Combat System, Item System, Win/Loss Conditions |
 | 11 | Game Setup | Polish | Alpha | Not Started | — | Character System, Equipment System, Events System |
 | 12 | Communication Protocol | Polish | Alpha | Not Started | — | Combat System, Character System |
 
@@ -172,9 +172,9 @@ None found. The Foundation → Core → Feature → Polish dependency flow is st
 | Metric | Count |
 |--------|-------|
 | Total systems identified | 12 |
-| Design docs started | 8 |
-| Design docs reviewed | 1 (combat-system.md — 2026-05-26) |
-| Design docs approved | 1 (combat-system.md — 2026-05-26) |
+| Design docs started | 10 |
+| Design docs reviewed | 1 (combat-system.md — 2026-05-26); cross-review complete (2026-05-26) |
+| Design docs approved | 0 (combat-system.md approval revoked — Needs Revision per cross-review B-CON-1, B-SCN-1) |
 | MVP systems designed | 9 / 9 |
 | Vertical Slice systems designed | 0 / 1 |
 | Alpha systems designed | 0 / 2 |

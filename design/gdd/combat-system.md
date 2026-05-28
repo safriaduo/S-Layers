@@ -1,8 +1,8 @@
 # Combat System
 
-> **Status**: Revised — Design Review applied (2026-05-26) — re-review pending
+> **Status**: Needs Revision — propagation update from angel-system.md redesign (2026-05-27) — re-review pending
 > **Author**: Federico Gallucci + Claude Code agents
-> **Last Updated**: 2026-05-26
+> **Last Updated**: 2026-05-27
 > **Revision notes**: Win/Loss collision reverted (Loss prevails for non-God encounters); AC-02, AC-18, AC-22, AC-27 corrected; AC-30 split; AC-31–AC-38 added (edge case coverage); encounter-card order defined; SRG/BUFF_value cross-references added; T_round range corrected; EPC guard clause added; Phase 2 full-magnitude requirement; Phase 4 Pillar 3 advisory; PRS spectator-state edge case and Player Fantasy note added; OQ-2 coefficients corrected; OQ-3 resolved.
 > **Implements Pillar**: Agency Over Dice (primary); Cooperative Ownership (secondary); Fast and Focused (third)
 
@@ -51,9 +51,9 @@ Sometimes the build reaches the place where all that remains are the slots Heave
 When an Event card resolves as a combat encounter, the following setup executes immediately:
 
 1. The encounter card is read aloud. It specifies: Angel identity, party size scaling (1–2 players: [N] Angel(s); 3–4 players: [M] Angel(s)), and any encounter-specific special rules.
-2. The appropriate Angel board(s) are retrieved from the Angel pool and placed face-down in the Angel Zone at the center of the table. Each Angel is a stack of layer cards arranged in layer order with Layer 1 on top.
-3. The top card of each Angel stack is flipped face-up. The Exposed layer's HP and face map are now visible to all players.
-4. A spare d6 is placed beside each Angel stack as its Damage Tracker Die, set to 0. If tracking needs to exceed 6, a second die acts as a tens digit (Integrity System edge case rule).
+2. The appropriate Angel board(s) are retrieved from the Angel pool and placed in the Angel Zone. Each Angel has **three slot columns** (Head, Body, Weapon) with their own layer stacks. Each slot column is placed with its outermost layer (L1) face-up and deeper layers face-down beneath it.
+3. The face-up Exposed layer of each slot column is readable by all players: trigger faces, action, HP, and Layer Index are visible.
+4. A **Slot Tracker Die** (spare d6) is placed below each slot column, set to 0. Each slot has its own independent tracker. If a tracker needs to exceed 6, a second die acts as the tens digit (Angel System edge case rule).
 5. **Encounter-card order is established:** Angel boards are placed left-to-right in the Angel Zone and this left-to-right sequence is the **encounter-card order** for all phase sequencing in this encounter (Phase 2 announcements, Step 5a BUFF/PRS activation, Phase 6 resolution). Encounter-card order does not change mid-encounter. When an Angel is Cleared, it is skipped in the sequencing loop — its slot is not removed, it is simply passed over in subsequent phases.
 6. Phase 1 begins immediately.
 
@@ -65,7 +65,7 @@ No other setup steps occur. All player board states (active layers, inert slots,
 
 An encounter ends when one of two conditions is met:
 
-- **Win — Angel Cleared:** All Angels in the encounter have had all layers stripped. Evaluated at Phase 5 end (strip check).
+- **Win — Angel Cleared:** All three slots (Head, Body, Weapon) of all Angels in the encounter are **Inert** (all layers stripped from each slot). Evaluated at Phase 5 end (per-slot strip checks). *(2026-05-27: "Cleared" = all 3 slots Inert, not all layers of one stack.)*
 - **Loss — Player Board Destroyed:** Any player's board has all three equipment slots in inert state. Evaluated at Phase 5 end (after committed dice resolve) or Phase 6 end (after hit routing resolves).
 
 **Win/Loss collision:** If a player board is destroyed and an encounter-level Angel (non-God) is cleared in the same turn, **loss takes priority**. A board-destroyed party does not receive an encounter win result. *(Exception: if the Angel cleared is the God card, Victory prevails — Win/Loss Conditions GDD Rule 6 governs session-level termination.)*
@@ -144,20 +144,23 @@ All placed-die effects fire in **party-chosen order**. The party may interleave 
 
 Rules governing this step:
 - N = raw die face. Items may modify effect output; they cannot modify N.
-- **Damage tracking**: Each damage effect against an Angel advances that Angel's Damage Tracker Die by the damage amount.
-- **Multiple-Angel targeting**: The party declares the target Angel at the moment each damage effect fires. Once declared, the assignment is locked for that effect.
+- **Damage targeting**: Before advancing any tracker, the active player declares both **the target Angel** and **the target slot** (Head, Body, or Weapon). A single effect's damage cannot be split between slots or Angels.
+- **Damage tracking**: Each damage effect advances the declared slot's **Slot Tracker Die** by the damage amount. Slot trackers are independent — damage declared to Body never advances Head or Weapon trackers. *(2026-05-27: per-slot targeting replaces per-Angel targeting.)*
 - **Accumulate effects**: Running totals update on each die placement; thresholds fire immediately when crossed, per Dice Economy Rules 8–11.
 - **Self-strip effects** (e.g., Martyr's Weapon): execute the full Layer Reveal Procedure (Equipment Degradation Rule 1) immediately when triggered. The newly revealed layer's effects are inert for the remainder of Phase 5.
 - **Mid-step board destruction**: If a player board is destroyed during Step 5b (all slots reach inert state from self-strip or triggered effects), the Win/Loss check fires after all committed dice on that board have fully resolved (Integrity System Rule 13). The encounter ends. Phase 5c and Phase 6 do not execute.
 
 **Step 5c — End-of-Phase Strip Check**
 
-After all placed-die effects have resolved, each Angel is evaluated independently:
+After all placed-die effects have resolved, each **slot of each Angel** is evaluated independently:
 
-- If `D_turn ≥ HP_eff` → that Angel's layer is stripped. The Layer Reveal Procedure (Equipment Degradation Rule 1) resolves immediately.
-- If `D_turn < HP_eff` → the layer survives. The damage tracker resets to 0. No carryover to the next round.
-- **Angel Cleared**: If the strip removes the Angel's last layer, the Angel is Cleared. A Win/Loss check fires. If all Angels are Cleared, the Win condition is met and the encounter ends.
-- All Angel damage trackers reset to 0 after all strip checks resolve.
+- If `D_slot_turn ≥ HP_eff` for a slot's Exposed layer → that layer is stripped. The Layer Reveal Procedure (Equipment Degradation Rule 1) resolves immediately. If no layers remain in that slot, the slot becomes **Inert** (Slot Tracker Die removed).
+- If `D_slot_turn < HP_eff` → the layer survives. The slot's tracker resets to 0. No carryover.
+- **Penetrating exception**: If the Penetrating flag is active, excess carries within the same slot (cascade within slot only — does not cross slot boundaries). See Angel System Rule 6.6.
+- **Angel Cleared**: If the strip check leaves all three slots of an Angel Inert (Head, Body, and Weapon all Inert), the Angel is **Cleared**. A Win/Loss check fires. If all Angels in the encounter are Cleared, the Win condition is met and the encounter ends. *(2026-05-27: Cleared = all 3 slots Inert.)*
+- All Slot Tracker Dice reset to 0 after all strip checks resolve.
+
+*(2026-05-27: Strip checks are now per-slot, not per-Angel.)*
 
 ---
 
@@ -301,11 +304,11 @@ PASS if `T_encounter_actual ∈ [T_lo, T_hi]`; WARN_SHORT if below; WARN_LONG if
 | Variable | Symbol | Type | Range | Description |
 |---|---|---|---|---|
 | Angel layer count | L_angel | int | {1, 2, 3, 4} | Number of layers in this Angel's design |
-| Layer j HP | HP_L(j) | int | [HP_min, HP_max] | Printed HP on layer j; at MVP (n=2): [10, 19] |
+| Layer j HP | HP_L(j) | int | [4, 14] | Printed HP on layer j (per-slot layer card). *(2026-05-27: updated from [HP_min, HP_max] = [10, 19] to [4, 14] — Angel System redesign moved to 3-slot WAS-based HP calibration; old bounds formula deprecated.)* |
 | Party aggregate damage | D_agg | float | [7, 40] | Expected damage per turn (Integrity System Formula 1); at MVP (n=2): 16 |
 | Expected turns per layer | T_angel(j) | float | [1.0, 3.0] | Integrity System Formula 2 — not redefined here |
 | Expected encounter turns | T_encounter_actual | float | [1.0, ∞) | Sum of T_angel across all layers |
-| Round duration | T_round | float (seconds) | [55, 175] | From Formula 1 (this GDD); baseline = 90 s |
+| Round duration | T_round | float (seconds) | [37, 193] | From Formula 1 (this GDD); baseline = 90 s |
 | Projected encounter time | T_encounter_minutes | float (minutes) | [0, ∞) | Real-time projection for this Angel design |
 | Low turn bound | T_lo | int | [3, 6] | Minimum turns for 5-minute encounter at current T_round |
 | High turn bound | T_hi | int | [5, 10] | Maximum turns for 8-minute encounter at current T_round |
@@ -337,7 +340,7 @@ The 7.8-minute projection validates the 5–8 minute target for experienced grou
 | `T_angel = 1 / P(D_turn ≥ HP_L)` | Integrity System (F2) | T_encounter_actual is a direct sum of T_angel values |
 | `D_agg = n × D_player_base` | Integrity System (F1) | Input to T_angel; at MVP (n=2, D_player_base=8): D_agg = 16 |
 | `N_strips = H_pt × T_encounter` | Equipment Degradation | T_encounter in N_strips is the calibration constant (8), not T_encounter_actual |
-| `HP_min/HP_max` bounds | Integrity System (F4) | EPC results outside these bounds = illegal Angel design, not a pacing problem |
+| ~~`HP_min/HP_max` bounds~~ | ~~Integrity System (F4)~~ | *SUPERSEDED 2026-05-27 — HP bounds formula deprecated. Angel layer HP is now calibrated via Angel System Formula 2 (WAS-based, HP ∈ [4, 14] per slot layer). EPC validity is enforced by T_angel ∈ [1.0, 3.0], not old HP_min/HP_max.* |
 | `WAS = Σ(P_angel(i) × S_i)` | Angel System | EPC measures timing; WAS measures threat pressure. Always check both. |
 | `S_combined ≤ 85` advisory | Item System | C_item=1 shifts T_round upward; validate S_combined before publishing item-heavy encounters |
 
@@ -424,7 +427,7 @@ The 7.8-minute projection validates the 5–8 minute target for experienced grou
 
 **EPC Formula**
 
-- **If T_round is provided outside its defined range [55, 175] seconds:** EPC returns INVALID_INPUT. It does not produce a PASS or WARN result. Correct T_round before re-running.
+- **If T_round is provided outside its defined range [37, 193] seconds:** EPC returns INVALID_INPUT. It does not produce a PASS or WARN result. Correct T_round before re-running.
 
 - **If EPC returns PASS but WAS (Angel System Formula 1) is below 1.5 for all layers:** the encounter is fast but passive — it completes within the time window but delivers insufficient threat. A PASS on EPC with WAS < 1.5 requires Angel redesign. Check both formulas jointly.
 
@@ -625,9 +628,9 @@ The 7.8-minute projection validates the 5–8 minute target for experienced grou
 
 ## Open Questions
 
-**OQ-1 [BLOCKED → Character System / Angel System]** Penetrating multi-strip firing order: when the Penetrating flag causes multiple layers to strip in one damage event, what is the ordering of passive on-destroy effects across strips? Depends on Character System CS-AC-30 and Angel System damage tracker reset rules. Must resolve before production.
+**OQ-1 [RESOLVED 2026-05-26]** Penetrating multi-strip firing order: cascade is permitted (Option A). Outermost layer strips first; on-destroy passives fire in outermost-first sequence; HP_eff for each newly revealed layer is recalculated fresh (HP_L + active BUFF this turn). Integrity Rule 20 updated with Penetrating exception. Angel Rule 6.6 updated with Penetrating exception. CS-AC-30 resolved in Character System Open Flags.
 
-**OQ-2 [BLOCKED → playtests]** T_round calibration: α_4, α_5, α_6, and β baseline values in the formula table (10 s, 10 s, 5 s, 15 s per-player respectively) are provisional estimates. Actual values must be measured against stopwatch playtests at MVP. AC-26 is deferred until playtest data is available. *(Note: the registry entities.yaml contains an older per-item C_item definition and different α values — the GDD-body formula is authoritative; the registry must be updated to match before any implementation tooling uses it.)*
+**OQ-2 [PARTIALLY RESOLVED 2026-05-26]** T_round calibration: α_4, α_5, α_6, and β baseline values in the formula table (10 s, 10 s, 5 s, 15 s per-player respectively) are provisional estimates. Actual values must be measured against stopwatch playtests at MVP. AC-26 is deferred until playtest data is available. *(Registry entities.yaml updated 2026-05-26 — cross-review B-CON-1 fix — to match GDD-body coefficients and output_range [37, 193]. Internal Formula 2 table range also corrected to [37, 193]. Coefficient calibration itself remains DEFERRED to playtests.)*
 
 **OQ-3 [RESOLVED in this GDD — confirm in Angel System]** Multi-Angel encounter: all Angels share one 3D6 roll per round (Phase 1 Rule 1). Each Angel reads the median face independently against its own layer's face map (Phase 2). This design decision is made here. The Angel System GDD must confirm this approach and define any Angel-specific exceptions (e.g., a unique Angel that rolls separately). No Combat System rule change required.
 

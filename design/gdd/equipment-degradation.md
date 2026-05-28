@@ -1,8 +1,8 @@
 # Equipment Degradation
 
-> **Status**: Designed
+> **Status**: Needs Revision — propagation update from angel-system.md redesign (2026-05-27)
 > **Author**: Federico Gallucci + Claude Code agents
-> **Last Updated**: 2026-05-25
+> **Last Updated**: 2026-05-27
 > **Implements Pillar**: The Build is Never Finished (primary); Agency Over Dice (secondary); Combos Must Be Discoverable (supporting)
 > **CD-GDD-ALIGN**: APPROVE (2026-05-25) — five non-blocking notes: (1) anti-example added to Principle 2; (2) cross-table indicator legibility spec added; (3) last-layer emotional beat added to Player Fantasy; (4) strip-event directorial note added; (5) flag to narrative-director that Player Fantasy makes a canonical claim about Heaven's design philosophy.
 
@@ -52,6 +52,8 @@ When the Integrity System sends a "layer stripped" event for a specific slot on 
 6. Any **Accumulate total** on the stripped card is lost at step 2. The newly revealed layer (if any) begins with a fresh Accumulate total of zero.
 
 > *Timing note: Step 4 (new layer becomes active) fires immediately. If the strip event occurs during Effect Resolution Phase and a die was placed on that zone for later resolution in the same phase, the die fizzles when its slot arrives — the slot is inert or the new layer is active, but the old layer's effect is gone. See Equipment System Rule 5.6.*
+
+> *Effect resolution ordering within a strip event (RESOLVED 2026-05-26): When a stripped layer has both an on-destroy passive AND an attached item with a departure trigger, the resolution order is: (1) on-destroy passive of the stripped layer fires first; (2) item departure trigger fires second; (3) new layer is revealed per step 4. This order is fixed — it cannot be changed by card text unless that card text explicitly overrides this sequence.*
 
 ---
 

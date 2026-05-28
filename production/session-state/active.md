@@ -1,11 +1,11 @@
 # Session State — S-Layers
 
-**Last updated**: 2026-05-26
+**Last updated**: 2026-05-27
 **Stage**: Concept
 
 ## Current Task
 
-Combat System GDD — REVIEWED AND APPROVED (2026-05-26). 11 blockers resolved. Review log: design/gdd/reviews/combat-system-review-log.md.
+Angel System redesign propagation — COMPLETE (2026-05-27). /propagate-design-change angel-system.md finished. All 6 affected files updated. Change impact report written. Next: individual /design-review passes or /review-all-gdds.
 
 ## Progress
 - [x] /start — project initialized, stage set to Concept, review mode set to full
@@ -41,6 +41,16 @@ Combat System GDD — REVIEWED AND APPROVED (2026-05-26). 11 blockers resolved. 
 - design/gdd/equipment-degradation.md — COMPLETE (2026-05-25) — all 8 sections ✓, 29 ACs, CD-GDD-ALIGN: APPROVE
 - design/gdd/item-system.md — COMPLETE (2026-05-25) — all 8 sections ✓, 34 ACs, 7 tuning knobs, CD-GDD-ALIGN: CONCERNS accepted (3 revisions: split-authority Rule 3, Tuning Knob 7 synergy scope, AC language updates)
 - design/gdd/combat-system.md — COMPLETE (2026-05-26) — all 8 sections ✓, 30 ACs, 7 tuning knobs, CD-GDD-ALIGN: APPROVE
+- docs/architecture/change-impact-2026-05-27-angel-system.md — CREATED (2026-05-27) — propagation report for angel-system.md redesign
+
+## Angel System Redesign Propagation — COMPLETE (2026-05-27)
+All 6 files updated by /propagate-design-change angel-system.md:
+1. integrity-system.md — 3-slot rules, Penetrating within-slot, HP bounds deprecated
+2. character-system.md — Penetrating rewritten, CS-AC-30 resolved, OQ-05 flagged
+3. win-loss-conditions.md — Cleared = all 3 slots Inert
+4. combat-system.md — slot targeting, EPC HP range [4,14], cross-ref table updated
+5. events-system.md — encounter card format clarified (angel count only, not layers/slot)
+6. entities.yaml — HP_alpha/HP_beta deprecated; angel-system.md added to referenced_by for D_agg, D_player_base, P_angel, E_angel, EPC, T_angel
 
 ## Combat System Key Decisions (2026-05-26)
 - **Phase sequence**: Enemy Roll → Action Assignment → Player Roll → Dice Placement → Effect Resolution → Enemy Resolution
@@ -90,20 +100,49 @@ Combat System GDD — REVIEWED AND APPROVED (2026-05-26). 11 blockers resolved. 
 6. ⚠️ Combat OQ-3: Multi-Angel encounter Phase 1 roll — one shared 3D6 or per-Angel? Must be resolved in Angel System GDD.
 
 ## Next Steps (IN ORDER)
-1. ✅ Run `/design-review design/gdd/combat-system.md` — APPROVED (2026-05-26), 11 blockers resolved
-2. Run `/design-review design/gdd/item-system.md` in a FRESH session (mandatory)
-3. Run `/design-review design/gdd/equipment-degradation.md` in a FRESH session (mandatory)
-4. Run `/design-review design/gdd/character-system.md` in a FRESH session (mandatory)
-5. Run `/design-review design/gdd/angel-system.md` in a FRESH session (mandatory)
-6. Run `/design-review design/gdd/equipment-system.md` in a FRESH session (mandatory)
-7. Run `/design-review design/gdd/dice-economy.md` in a FRESH session (mandatory)
-8. Run `/design-review design/gdd/integrity-system.md` in a FRESH session (mandatory)
-9. Run `/design-review design/gdd/win-loss-conditions.md` in a FRESH session (mandatory)
-10. Run `/gate-check systems-design` after all design-reviews complete
-11. Build MVP physical prototype (months 1-3)
-12. Begin audience building in parallel (month 1+)
-13. Search for woodcut illustrator (month 2)
-14. Run /art-bible — visual identity specification
+
+### ✅ BLOCKERS RESOLVED (2026-05-26) — cross-review verdict upgraded to CONCERNS
+Before any individual /design-review runs, resolve these 7 blockers (see report: design/gdd/gdd-cross-review-2026-05-26.md):
+
+**BLOCKER 1 — Penetrating cascade — ✅ RESOLVED 2026-05-26**
+- Decision: Option A (true cascade). Integrity Rule 20 + Angel Rule 6.5 updated with Penetrating exception. CS-AC-30 resolved. Combat OQ-1 resolved. Outermost-first passive ordering locked.
+
+**BLOCKER 2 — Win/Loss Rule 6 God-only qualifier — ✅ RESOLVED 2026-05-26**
+- Rule 6 rewritten to open with "God card only" scope. Non-God simultaneous triggers: Lost takes priority.
+
+**BLOCKER 3 — T_round registry + Formula 2 table — ✅ RESOLVED 2026-05-26**
+- Registry updated: baselines T_base=25, α_4=10, α_5=10, α_6=5, β=15; output_range=[37,193]. Combat Formula 2 table corrected. Combat OQ-2 updated.
+
+**BLOCKER 4 — Pillar 5 — ⚠️ USER ACCEPTED AS-IS (2026-05-26)**
+- User decision: no change to game-concept.md. Will validate in playtests. Risk accepted.
+
+**BLOCKER 5 — Martyr dump-dice — ⚠️ DOWNGRADED TO WARNING (user decision, 2026-05-26)**
+- No change now. Flag for first playtest observation: watch for low-roll frustration on Martyr.
+
+**BLOCKER 6 — Penetrating flag + item departure trigger — ✅ RESOLVED 2026-05-26**
+- Added to character-system.md Rule 11 Edge Cases: item departure-trigger damage is not Penetrating.
+
+**BLOCKER 7 — On-destroy vs. item departure ordering — ✅ RESOLVED 2026-05-26**
+- Added to equipment-degradation.md Rule 1 timing note: (1) on-destroy passive, (2) item departure trigger, (3) new layer reveals.
+
+### After blockers resolved:
+1. ✅ Run `/design-review design/gdd/combat-system.md` — originally APPROVED (2026-05-26); NOW Needs Revision (cross-review B-CON-1, B-SCN-1)
+2. Resolve all 7 blockers above across affected GDDs (can do in one session)
+3. Re-run `/review-all-gdds` OR proceed directly to individual design-reviews:
+   - `/design-review design/gdd/integrity-system.md`
+   - `/design-review design/gdd/character-system.md`
+   - `/design-review design/gdd/angel-system.md`
+   - `/design-review design/gdd/combat-system.md`
+   - `/design-review design/gdd/win-loss-conditions.md`
+   - `/design-review design/gdd/equipment-system.md`
+   - `/design-review design/gdd/item-system.md`
+   - `/design-review design/gdd/dice-economy.md`
+   - `/design-review design/gdd/equipment-degradation.md`
+4. Run `/gate-check systems-design` after all reviews pass
+5. Build MVP physical prototype (months 1-3)
+6. Begin audience building in parallel (month 1+)
+7. Search for woodcut illustrator (month 2)
+8. Run /art-bible — visual identity specification
 
 ## CD Non-Blocking Notes (from Combat System review)
 - Add one-sentence rationale for "Underspent damage discarded" in Phase 5 (design reason: each strike must be authored against a specific layer)
@@ -119,3 +158,46 @@ Combat System GDD — REVIEWED AND APPROVED (2026-05-26). 11 blockers resolved. 
 - CD forward note: verify SR-5 contract at Equipment/Item GDD review (name 3 non-obvious synergies per character) — PARTIALLY ADDRESSED in Item System Tuning Knob 7; verify at design-review
 - CD forward note: Equipment Degradation Player Fantasy makes canonical claim about Heaven's design philosophy ("built to be operated") — flag to narrative-director when authoring world lore
 - Item System OQ-6: Restore + re-equip loop — verify no perverse loop exists when layer is restored and item is available for re-attachment (flagged in Combat OQ-4)
+
+## Session Extract — /review-all-gdds 2026-05-26
+- Verdict: FAIL
+- GDDs reviewed: 12 (10 system GDDs + game-concept.md + systems-index.md)
+- Flagged for revision (Blocking): integrity-system.md, win-loss-conditions.md, equipment-system.md, angel-system.md, character-system.md, combat-system.md, item-system.md, game-concept.md
+- Flagged for revision (Warning): dice-economy.md, events-system.md, systems-index.md, design/registry/entities.yaml
+- Blocking issues: 7 — (1) Penetrating multi-strip contradiction across 4 GDDs, affects Pilgrim balance; (2) Win/Loss Rule 6 missing God-only qualifier; (3) T_round registry out-of-date + internal Formula 2 mismatch; (4) Pillar 5 undeliverable at MVP; (5) Martyr no dump-dice home; (6) Penetrating flag + item departure trigger undefined; (7) on-destroy passive vs. item departure ordering undefined
+- Recommended next: Resolve all 7 blockers (can be done in one focused design session), then re-run /review-all-gdds or proceed to individual /design-review passes
+- Report: design/gdd/gdd-cross-review-2026-05-26.md
+
+## Session Extract — /review-all-gdds 2026-05-27
+- Verdict: FAIL
+- GDDs reviewed: 12 (10 system GDDs + game-concept.md + systems-index.md)
+- All 7 prior consistency blockers (2026-05-26) CONFIRMED-FIXED
+- Flagged for revision (Blocking): character-system.md (B-DT-1 Pilgrim S_encounter recompute), events-system.md (B-SCN-1 item departure-trigger no-Angel-target undefined)
+- Flagged for revision (Warning): item-system.md, angel-system.md, combat-system.md, integrity-system.md, equipment-degradation.md, game-concept.md, win-loss-conditions.md (Info)
+- Blocking issues: 2 — (1) B-DT-1: Pilgrim may be unviable at MVP n=2 — within-slot Penetrating + HP [4,14] + max 3-layer slot requires recompute; MVP Angels have 2-layer slots while Pilgrim band-viability requires ≥3; (2) B-SCN-1: item departure-trigger damage during Bad Event has no Angel target — undefined behavior across events/item/integrity GDDs
+- Recommended next: Resolve B-DT-1 (Pilgrim S_encounter recompute) and B-SCN-1 (define item departure with no-Angel target — recommend damage fizzles), then re-run /review-all-gdds or proceed to individual /design-review passes
+- Report: design/gdd/gdd-cross-review-2026-05-27.md
+
+## B-DT-1 RESOLVED — 2026-05-27
+- Decision: Keep cascade / excess-carries Penetrating (Angel Rule 6.6). Retire D_penetrating = R × n_L AOE formula.
+- Cascade model: damage = R total; n_strips = max j where R ≥ cumulative HP through layer j.
+- Pilgrim S_encounter: ~37–40 base (n=2); ~54–58 with 1× Type 2 item on Reservoir (in band); ~54–60 at n=3-4 (cascade double-strip, in band).
+- Design intent locked: Pilgrim is intentionally item-dependent at n=2. Items complete the arc. Not a flaw.
+- Files updated: character-system.md (Formula 3 cascade rewrite, S_encounter table, Tuning Knob 6, OQ-05 closed), angel-system.md (OQ-05 closed), entities.yaml (the_pilgrim notes).
+- Remaining 2027-05-27 blocker: B-SCN-1 (item departure-trigger with no Angel target — events-system.md + item-system.md)
+
+## B-SCN-1 RESOLVED — 2026-05-27
+- Decision: Departure trigger fires unconditionally; offensive damage with no valid Angel target fizzles. Trigger consumed, item departs, no damage applied.
+- Files updated: events-system.md (added edge case under "Bad Event + Equipment Degradation"), item-system.md (added edge case under "Departure and Trigger Edge Cases")
+- Both blockers from gdd-cross-review-2026-05-27.md now resolved: B-DT-1 ✓, B-SCN-1 ✓
+- /review-all-gdds 2026-05-27 verdict: FAIL → all blockers now closed. Ready to re-run review or proceed to individual /design-review passes.
+
+## /review-all-gdds 2026-05-28
+- Verdict: FAIL
+- GDDs reviewed: 12
+- Prior blockers B-DT-1 and B-SCN-1: CONFIRMED RESOLVED & PROPAGATED
+- Blocking issues: 2 — (1) B-ATTN-1: player attention budget overflow (9 simultaneous systems during Phase 4 placement; Pillar 3 structurally violated, EPC WARN_LONG at ~115s); (2) B-REST-1: no restoration items in MVP item pool + inter-encounter recovery LOCKED — session is a loss spiral by design
+- Consistency warnings (4): W-CON-1 stale HP_L=19 in integrity-system.md; W-CON-2 T_active 1.0 vs 2.7 in item-system.md; W-CON-3 combat Phase 5b vs Integrity Rule 17 ordering; W-CON-4 combat-context departure-trigger target undeclared
+- Design warnings (8): W-DT-1–8 (Pilgrim+Martyr mandatory, routing-to-Martyr-Body deterministic, Reservoir hold dominant, Type 2 item prescribed, cross-encounter curve, Pilgrim RNG-conditional, Pillar 5 deferred, Pillar 3 over-claimed)
+- Recommended next: Resolve B-ATTN-1 (document 3-slot risk + add Pillar 3 playtest gate) and B-REST-1 (add restoration item to item-system.md MVP pool, close equipment-degradation.md Tuning Knob 5), then re-run /review-all-gdds
+- Report: design/gdd/gdd-cross-review-2026-05-28.md

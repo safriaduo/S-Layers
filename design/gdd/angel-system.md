@@ -1,9 +1,10 @@
 # Angel System
 
-> **Status**: Designed — CD-GDD-ALIGN: CONCERNS addressed (2026-05-25)
+> **Status**: Needs Revision — Structural redesign in progress (2026-05-27)
 > **Author**: Federico Gallucci + Claude Code agents
-> **Last Updated**: 2026-05-25
+> **Last Updated**: 2026-05-27
 > **Implements Pillar**: Agency Over Dice (primary); Fast and Focused (secondary); Cooperative Ownership (supporting)
+> **Redesign note**: 2026-05-27 — Monolithic layer-stack model replaced with 3-slot board architecture (Head/Body/Weapon) mirroring player board. Per-slot HP, per-slot damage trackers, escalating trigger sets per layer, party-size scaling via layer count and angel count. All formulas, ACs, tuning knobs, and edge cases rewritten.
 
 ## Overview
 
@@ -23,25 +24,47 @@ The layer beneath is not weaker. It is different. A new face map, a new geometry
 
 **1. Angel Board Physical Structure**
 
-1. Each encounter places one or more **Angel boards** — physical stacks of layer cards — in a dedicated **Angel Zone** at the center of the table, visible to all players simultaneously.
-2. The number of Angels in play is determined by the encounter event card, scaled to party size. Each encounter card states: *"1–2 players: [N] Angel(s). 3–4 players: [M] Angel(s)."*
-3. Each Angel's board is a stack of **layer cards** arranged in encounter order: Layer 1 on top (outermost, first to be fought), deepest layer on the bottom (last to be stripped).
-4. **Exposed layer**: The top card of the stack — the currently active layer. Its HP value and face map are face-up and visible to all players.
-5. **Hidden layers**: All cards beneath the Exposed layer are face-down. HP values and face maps are not visible until the layer above is stripped.
-6. Each Angel has a dedicated **Damage Tracker Die** — a spare d6 placed beside its stack in the Angel Zone. It tracks cumulative damage dealt to that Angel this turn. If the running total exceeds 6, a second die serves as the tens digit (per the Integrity System's two-die tracking rule).
-7. **All Angels in an encounter share one 3D6 roll per round.** A single set of three dice is rolled in the Angel Roll Phase. Every Angel applies the same median face value to its own Exposed layer's face map.
+1. Each encounter places one or more **Angel boards** in a dedicated **Angel Zone** at the center of the table, visible to all players simultaneously.
+
+2. Each Angel board has **three parallel slot columns**: **Head**, **Body**, and **Weapon** — left to right in that order. This mirrors the player board structure. Each column is physically distinct and independently managed.
+
+3. Each slot column contains a **layer stack** of face-down cards, with the **Exposed layer** (current active layer) placed face-up at the top of its column. Hidden layers remain face-down beneath it.
+
+   *Standard slot depth for a reference MVP angel: Head = 1 layer, Body = 2 layers, Weapon = 3 layers. The encounter card specifies exact layer counts for each Angel.*
+
+4. Each slot column has its own dedicated **Slot Tracker Die** — a spare d6 placed below the column's Exposed layer. It tracks cumulative damage dealt to that slot during the current turn. If the running total exceeds 6, a second die serves as the tens digit.
+
+5. **Slots are independent.** Damage tracked on the Head tracker never affects the Body or Weapon trackers. Each slot strips on its own terms, reveals its own next layer, and becomes inert on its own timeline.
+
+6. The number of Angels in play is determined by the encounter event card, scaled to party size. Each encounter card states: *"1–2 players: [N] Angel(s). 3–4 players: [M] Angel(s)."*
+
+7. **All Angels in an encounter share one 3D6 roll per round.** A single set of three dice is rolled in the Angel Roll Phase. Every active slot on every Angel reads the same median face value against its own face map.
+
+8. When a slot's last layer is stripped, that slot is **Inert**. The column remains at the table (for reference) but is marked inert — its actions no longer fire on any die result. The Slot Tracker Die is removed.
+
+9. When all three slots of an Angel are Inert, that Angel is **Cleared** → Win/Loss check fires immediately.
+
+*Physical note (downstream requirement for component design):* The Component Design spec must accommodate the 3-column layout at standard play distance. Required: each slot column's HP value and trigger faces must be table-readable at 60–100 cm; each Slot Tracker Die must be unambiguously associated with its column. Reference player board layout as the visual precedent.
 
 ---
 
-**2. Layer Card Anatomy**
+**2. Slot Card Anatomy**
+
+Each Angel slot consists of **layer cards** stacked within the slot column. Each layer card contains:
 
 | Field | Description | Visibility |
 |---|---|---|
-| **HP value** | Integer. Printed prominently. The damage threshold per turn to strip this layer. | Face-up when Exposed; face-down when Hidden |
-| **Face Map** | Six entries: one action per face (1–6). Each entry ≤ 8 words. One action type code (HIT / SRG / PRS / BUFF) per entry. | Face-up when Exposed; face-down when Hidden |
-| **Layer Index** | Ordinal label: "Layer 1 / 3", "Layer 2 / 3", etc. Printed on card back. | Always visible (card back) |
-| **Angel Name / Tag** | Confirms which Angel this layer belongs to. | Face-up when Exposed |
-| **Target Party Size** | The party size range this layer was balanced for (e.g., "1–2" or "3–4"). | Face-up when Exposed |
+| **Slot Type** | Printed prominently: HEAD / BODY / WEAPON. Identifies the column this card belongs to. | Always visible (card back) |
+| **Trigger Faces** | The die face values (subset of 1–6) that activate this slot's action. Example: "2 · 4 · 5". Faces not listed produce no action from this slot. | Face-up when Exposed; face-down when Hidden |
+| **Action** | What fires when a trigger face shows: one action entry using HIT / SRG / PRS / BUFF codes. ≤ 8 words. | Face-up when Exposed; face-down when Hidden |
+| **HP** | Integer. Printed prominently. The damage threshold this slot layer requires to strip. | Face-up when Exposed; face-down when Hidden |
+| **Layer Index** | Ordinal label: "L1 / 3", "L2 / 3", etc. Printed on both card front and card back. | Always visible |
+| **Angel Name / Tag** | Confirms which Angel this card belongs to. | Face-up when Exposed |
+| **Target Party Size** | The party size range this layer was balanced for: "1–2" or "3–4". | Face-up when Exposed |
+
+**Key structural rule:** Each slot column's layer cards share the same **Slot Type** (Head, Body, or Weapon) and are stacked in layer order (L1 on top, highest L at the bottom). Each layer within a slot may have a different action and a different HP value — deeper layers escalate in both threat and durability.
+
+**Trigger set notation:** A slot card lists only its active trigger faces. A face unlisted is silent — it produces no action from that slot. Multiple slots may share a trigger face (e.g., both Body and Weapon trigger on face 4): when the die shows 4, both slots fire their respective actions simultaneously.
 
 ---
 
@@ -58,152 +81,188 @@ All face map entries use exactly one of these four action categories. No other a
 
 ---
 
-**4. Face Map Design Rules**
+**4. Slot Design Rules**
 
-**Rule 4.1 — Maximum 3 action types per layer.** No single layer may use more than 3 distinct action categories across its 6 faces. A player learning a new layer sees at most 3 types of threat.
+**Rule 4.1 — Each slot layer has one action type.** A layer card's action field contains exactly one action entry (HIT, SRG, PRS, or BUFF). The trigger faces determine *when* it fires; the action determines *what* it does. A slot with a HIT action always deals the same hit — the frequency of threat comes from how many faces are in its trigger set.
 
-**Rule 4.2 — At least one face per layer must be HIT or SRG.** An Angel that cannot deal hits is not a credible obstacle.
+**Rule 4.2 — At least one slot per Angel must carry HIT or SRG.** An Angel with no damage-dealing slot is not a credible obstacle.
 
-**Rule 4.3 — Severity Calibration.** Define a Severity Score per face action:
+**Rule 4.3 — Trigger set design and frequency.** The trigger faces assigned to a slot determine `F_slot` — the probability the slot fires on any given roll:
 
-| Severity | Score | Example |
-|---|---|---|
-| 0 | Light BUFF or light PRS | BUFF +2; "Placements on Weapon slots resolve last" |
-| 1 | Significant PRS | "Head slots may not receive dice this turn" |
-| 2 | HIT: 1 party hit | 1 freely-routed hit |
-| 3 | HIT: 1 targeted hit or heavy BUFF | "Hit: the player with the fewest layers"; BUFF +5 |
-| 4 | HIT: 2 party hits | 2 freely-routed hits |
-| 5 | SRG | Escalating 2+ hits |
+`F_slot = Σ P_angel(i)` for i in the slot's trigger set
 
-**Weighted Average Severity (WAS):** `WAS = Σ(P_i × S_i)` where P_i is P_angel(i) from the Dice Economy.
+| Trigger Set Example | Faces | F_slot | Design Role |
+|---|---|---|---|
+| {1, 6} | 2 faces | ≈ 0.148 | Rare — high drama when it fires; slot can carry SRG or high-severity action |
+| {3, 4} | 2 common faces | ≈ 0.482 | Moderate — reliable threat; mid-weight action |
+| {2, 4, 5} | 3 faces | ≈ 0.611 | Frequent — steady pressure; calibrate WAS carefully |
+| {1, 2, 5, 6} | 4 faces | ≈ 0.518 | Moderate-high; wide spread across rarity bands |
 
-| WAS Band | Design Intent |
+**Rule 4.4 — Shared trigger faces create compound rounds.** If a face value appears in two or more slots' trigger sets, all matching active slots fire simultaneously when that face shows. Encounter designers must check compound-fire rounds (same die value → multiple actions) for WAS_total to stay within band. A face that triggers both a HIT and a SRG simultaneously is high severity and must be weighted accordingly.
+
+**Rule 4.5 — Severity calibration (per slot).** Use the same severity scale as the action taxonomy. The **Slot Weighted Average Severity (WAS_slot)** is:
+
+`WAS_slot = F_slot × S_slot`
+
+where `S_slot` is the severity score of the slot's action.
+
+**Total Angel WAS:** `WAS_total = Σ WAS_slot` across all active slots.
+
+| WAS_total Band | Design Intent |
 |---|---|
-| < 1.5 | Passive — light pressure. Valid for outer layer of a boss. |
-| 1.5–2.5 | Balanced — sustained threat. Target for most MVP layers. |
-| 2.5–3.5 | Aggressive — valid for inner layers and hard Angels. |
+| < 1.5 | Passive — light pressure. Valid for a skirmish or outer-layer encounter. |
+| 1.5–2.5 | Balanced — sustained threat. Target for most standard MVP encounters. |
+| 2.5–3.5 | Aggressive — valid for inner-layer encounters and boss faces. |
 | > 3.5 | Degenerate — party cannot plan. Do not publish. |
 
-**Rule 4.4 — Common-face constraint.** Faces 3 and 4 (each ~24.1%) may not both carry Severity ≥ 4 on the same layer. At least one of them must be Severity ≤ 3. This ensures the most frequent faces are never simultaneously the most punishing.
+**Rule 4.6 — Rare trigger sets may carry high-severity actions.** Faces with F_slot < 0.2 (e.g., trigger set {1, 6}) may carry SRG or Severity 4–5 actions, provided WAS_total stays in band. High severity on a rare trigger is dramatic, not degenerate.
 
-**Rule 4.5 — Rare-face latitude.** Faces 1 and 6 (each ~7.4%) may carry SRG or any Severity ≤ 5, provided WAS stays within band. A high-severity rare face is more dramatic because it fires infrequently.
+**Rule 4.7 — BUFF actions must carry a guaranteed secondary component.** Every slot layer with a BUFF action must also include a secondary component that fires unconditionally (a PRS constraint or a HIT/SRG). A BUFF entry with no secondary component is an **illegal slot card** — the secondary ensures every BUFF trigger creates a table event even when the party is not targeting that slot.
 
-**Rule 4.6 — BUFF faces must carry a guaranteed secondary component.** Every face map entry that includes a BUFF action must also include a secondary component that fires unconditionally — regardless of whether the party is dealing damage to that Angel this turn. The secondary component must be one of:
-
-- A **PRS constraint**: e.g., *"BUFF +4. PRS: Weapon slots resolve last."*
-- A **HIT or SRG**: e.g., *"BUFF +3. HIT: 1 party hit."*
-
-The secondary component fires exactly as its action type specifies — PRS at the start of the Effect Resolution Phase, HIT/SRG in the Angel Resolution Phase. A BUFF face carrying only a threshold adjustment and no secondary component is an **illegal face map entry**. Card authors must verify:
-1. The secondary component is present (the entry has two parts).
-2. The secondary component is not vacuously satisfied — a PRS restricting a slot type absent from all expected character builds in the target encounter does not satisfy this rule. Choose a slot type that is structurally present in all expected character configurations.
-
-*Rationale*: Without a guaranteed secondary component, a BUFF face on an Angel the party is not currently targeting produces zero table effect — the threshold is raised on a tracker that will not be tested. This is not a dramatic tension moment; it is a wasted face. The secondary component ensures every BUFF face creates a table event regardless of party targeting decisions.
+**Action economy arc.** As slots become Inert, WAS_total decreases: the angel becomes measurably less dangerous as the party strips it. Encounter designers should set outer layers (first encountered) to have the highest combined fire frequency, so early rounds feel most threatening. Inner layers can compensate with higher severity-per-fire.
 
 ---
 
 **5. Action Resolution Order**
 
-**Rule 5.1 — PRS and BUFF fire at the start of the Effect Resolution Phase** — before any player dice resolve. Players see both the constraint and the modified threshold before committing to die resolution order.
+**Rule 5.1 — PRS and BUFF fire at the start of the Effect Resolution Phase** — before any player dice resolve. For each active slot whose trigger set includes the committed face, check: if that slot's action is PRS or BUFF, announce it now.
 
-**Rule 5.2 — HIT and SRG fire in the Angel Resolution Phase** — after all player effects have resolved, per the Dice Economy's timing lock.
+- Announce all active-slot BUFF values first (effective threshold raised per slot).
+- Announce all active-slot PRS constraints second (placement restrictions applied).
+- Players see all constraints and modified thresholds before any placement resolution begins.
 
-**Rule 5.3 — Compound action sequence.** If a face entry contains multiple components (e.g., "PRS: Head slots disabled. HIT: 1 party hit"), components resolve in printed order: PRS/BUFF at phase start, HIT/SRG in the Angel Resolution Phase.
+**Rule 5.2 — Multiple-slot BUFF/PRS at phase start.** If two slots both trigger on the same face and both carry BUFF or PRS:
 
-**Rule 5.4 — Hit routing is party-chosen.** The face map states hit count and type. The party decides the routing order, subject to Integrity System routing rules.
+- All BUFFs are announced before any PRS.
+- Within each category, announce in slot order: Head → Body → Weapon.
+- All effects are simultaneously in force once announced.
 
-**Rule 5.5 — Surge sequence.** Base hits resolve first. Then the escalation clause is evaluated. If met, additional hits fire immediately in party-chosen routing order.
+**Rule 5.3 — HIT and SRG fire in the Angel Resolution Phase** — after all player effects have resolved, per the Dice Economy's timing lock.
 
-**Rule 5.6 — Multiple-Angel announcement order.** When multiple Angels are in play, all BUFF/PRS announcements happen together at phase start (Angel A then Angel B, in encounter-card order). All constraints apply simultaneously for the turn.
+**Rule 5.4 — Multiple-slot HIT/SRG in the Angel Resolution Phase.** All slots with HIT or SRG that triggered this round resolve in slot order: **Head → Body → Weapon**. If both slots carry HIT, Head's hits are fully routed before Body's hits begin.
+
+**Rule 5.5 — Hit routing is party-chosen.** Each HIT or SRG effect names hit count and type. The party decides routing per Integrity System routing rules, independently for each slot's hits.
+
+**Rule 5.6 — Surge sequence.** Base hits for a SRG resolve first. Then the escalation clause is evaluated. Additional hits fire immediately after, in party-chosen routing order.
+
+**Rule 5.7 — Inert slots are silent.** If the committed face appears in an Inert slot's trigger set, that slot produces no action. The face is effectively safe for that slot's former threat. Inert slots are never announced.
+
+**Rule 5.8 — Compound action sequence (BUFF + HIT on same slot).** If a slot layer card contains both BUFF and a secondary HIT/SRG (per Rule 4.7), components fire in printed order: BUFF announced at phase start; HIT/SRG resolves in the Angel Resolution Phase.
 
 ---
 
 **6. Layer Transition Rules**
 
-**Rule 6.1 — Strip trigger.** At the end of the Effect Resolution Phase, each Angel independently checks: if tracker total ≥ effective HP threshold (HP_L + any active BUFF) → layer stripped.
+**Rule 6.1 — Damage targeting declaration.** When a player's damage effect fires, the active player declares both **which Angel** and **which slot** (Head, Body, or Weapon) receives that damage before advancing any Slot Tracker Die. A single effect's output cannot be split between two slots or two Angels — it fully targets one slot on one Angel.
 
-**Rule 6.2 — Physical strip procedure:**
-1. Party announces the tracker total.
-2. Compare to effective threshold (HP_L + any active BUFF).
-3. **If total ≥ threshold:** Remove the Exposed layer card. Place it face-up in the **Stripped Pile** beside the Angel Zone (kept for reference — players may consult stripped layers at any time).
-4. Flip the next card in the stack face-up. Its HP and face map are immediately visible.
-5. Reset the Damage Tracker Die to zero.
-6. **If no cards remain:** Angel is **Cleared** → Win/Loss check fires immediately.
-7. **If total < threshold:** Layer survives. Reset tracker to zero. No state change.
+**Rule 6.2 — Slot Tracker accumulation.** Damage accumulates in the targeted slot's tracker throughout the Effect Resolution Phase. All player damage to the same slot in the same turn pools together.
 
-**Rule 6.3 — Hidden-until-strip.** Hidden layer cards are face-down until the moment of strip. Players cannot plan around the new face map before it is revealed.
+**Rule 6.3 — Strip trigger (per slot).** At the end of the Effect Resolution Phase, each slot independently checks: if `tracker total ≥ HP_L` for the Exposed layer (including any active BUFF on that slot) → the layer is stripped.
 
-**Rule 6.4 — Layer transition is a public event.** All players see the new face map simultaneously at the moment of strip.
+**Rule 6.4 — Physical strip procedure (per slot):**
+1. Announce the slot tracker total.
+2. Compare to effective threshold (`HP_L + BUFF_value` if a BUFF fired on this slot this turn).
+3. **If total ≥ threshold:** Remove the Exposed layer card from the slot column. Place it face-up beside the Angel board (kept for reference).
+4. Flip the next card in the slot column face-up. Its trigger faces, action, and HP are immediately visible.
+5. **Reset the Slot Tracker Die to zero.**
+6. **If no next card remains in this slot column:** The slot is **Inert** — remove the Slot Tracker Die.
+7. **If total < threshold:** Layer survives. Reset Slot Tracker to zero. No state change.
 
-**Rule 6.5 — One strip check per turn per Angel.** No mid-phase checks. The single check fires at end of Effect Resolution Phase only.
+**Rule 6.5 — No damage carryover (non-Penetrating).** When a layer strips, any damage above the threshold is **discarded**. It does not carry to the newly revealed next layer. Tracker resets to 0 regardless of surplus.
 
-**Rule 6.6 — BUFF does not persist.** If a BUFF fires and the layer survives, next turn's threshold reverts to HP_L. BUFF does not stack across turns.
+**Rule 6.6 — Penetrating exception (Character System Rule 11 — Pilgrim ability).** When a Penetrating damage event targets a slot: if the damage total meets or exceeds HP_L, the excess carries to the next layer of **the same slot only**. Sequential strip checks fire within the same phase, outermost layer first. On-destroy passives trigger in outermost-first order. Penetrating damage does **not** cross slot boundaries — excess stops at the slot boundary even under Penetrating. The Angel may have a slot fully Inerted in a single Penetrating event if accumulated damage exceeds all remaining layers' HP in that slot.
+
+**Rule 6.7 — HP_eff on newly revealed layer (Penetrating cascade).** When a Penetrating cascade reveals a new layer mid-phase, HP_eff for that new layer is calculated fresh: `HP_eff = HP_L_new + BUFF_value_new` (BUFF for the new layer = 0 unless that slot's face triggered BUFF this turn).
+
+**Rule 6.8 — Hidden-until-strip.** Hidden layer cards in a slot column are face-down until the moment the layer above them is stripped. Players cannot plan around the new layer before it is revealed.
+
+**Rule 6.9 — Layer transition is a public event.** All players see the new layer card simultaneously at the moment of strip.
+
+**Rule 6.10 — One strip check per slot per turn (non-Penetrating).** Outside of the Penetrating exception, each slot fires exactly one strip check at end of Effect Resolution Phase.
+
+**Rule 6.11 — BUFF does not persist between turns.** If a slot's BUFF fires and the layer survives, next turn's threshold reverts to HP_L. BUFF does not stack across turns.
+
+**Rule 6.12 — Angel Cleared check.** After all three slot strip checks resolve for this turn: if all slots of an Angel are Inert → the Angel is **Cleared** → Win/Loss check fires immediately, before the Angel Resolution Phase begins.
 
 ---
 
 **7. Multi-Angel Rules**
 
-**Rule 7.1 — All Angels share one 3D6 roll.** The single median face value is applied to every Angel's Exposed layer face map this round. One roll, multiple readings.
+**Rule 7.1 — All Angels share one 3D6 roll.** The single median face value is applied to every active slot on every Angel this round. One roll, read across all slot columns of all Angels.
 
-**Rule 7.2 — Each Angel reads its own face map.** The same face may produce different actions on different Angels. All actions are announced simultaneously at the Angel Roll Phase announcement step.
+**Rule 7.2 — Each slot reads its own trigger set.** The same median face may produce different results per slot and per Angel. A slot fires only if the median face is in its trigger set. Multiple slots across multiple Angels may fire simultaneously.
 
-**Rule 7.3 — Damage is targeted per Angel.** When a damage-dealing effect fires, the active player declares which Angel receives that damage before advancing any tracker. A single effect's output cannot be split between two Angels — it fully targets one.
+**Rule 7.3 — Damage is targeted per Angel per slot.** When a damage-dealing effect fires, the active player declares which Angel AND which slot receives that damage before advancing any tracker. A single effect's output cannot be split between slots or Angels.
 
-**Rule 7.4 — Strip checks are independent per Angel.** Both Angels can be stripped in the same turn. Each tracker resets to zero independently after its check.
+**Rule 7.4 — Strip checks are independent per slot per Angel.** Each slot's tracker and strip check is fully independent. Both Angels' slots can strip in the same turn. Each Slot Tracker resets to zero independently after its check.
 
-**Rule 7.5 — Hit resolution order with multiple Angels.** BUFF/PRS announcements from all Angels happen together at phase start. HIT/SRG actions resolve in the Angel Resolution Phase: encounter-card order (Angel A's hits, then Angel B's). If order is not printed, the party declares it before the encounter begins — this choice is binding for the full encounter.
+**Rule 7.5 — Announcement order at phase start (multiple Angels).** BUFF/PRS announcements at the start of the Effect Resolution Phase follow this order:
+1. Angel A, all triggering slots (Head → Body → Weapon), BUFFs first then PRS
+2. Angel B, all triggering slots (Head → Body → Weapon), BUFFs first then PRS
+3. All constraints apply simultaneously once announced.
 
-**Rule 7.6 — Encounter continues until all Angels are Cleared.** Clearing one Angel does not end the encounter.
+**Rule 7.6 — HIT/SRG resolution order (multiple Angels).** In the Angel Resolution Phase, resolve Angel A's triggering slots (Head → Body → Weapon), then Angel B's triggering slots (Head → Body → Weapon). Encounter-card order governs which Angel is "A". If order is not printed, the party declares it before the encounter begins — binding for the full encounter.
 
-**Rule 7.7 — Board destruction applies normally.** If any player's board is destroyed during a multi-Angel encounter, the Win/Loss check fires immediately, regardless of Angel states.
+**Rule 7.7 — Encounter continues until all Angels are Cleared.** Clearing one Angel does not end the encounter. All slots of all Angels must be Inert.
 
-**Rule 7.8 — Multi-Angel Resolution Ritual.** When multiple Angels are in play, follow this named sequence to prevent mis-reads and ensure all actions are acknowledged before placement begins:
+**Rule 7.8 — Board destruction applies normally.** If any player's board is destroyed during a multi-Angel encounter, the Win/Loss check fires immediately, regardless of Angel states.
 
-1. The **Lead Player** (the player whose turn it is to lead declarations, or any agreed-upon consistent role) reads the median die face aloud: *"The die shows [N]."*
-2. Starting with Angel A (encounter-card order), the Lead Player points to each Angel's Exposed layer card and reads the action on face [N] aloud: *"Angel A — face [N]: [action text]."* Then *"Angel B — face [N]: [action text]."* Continue for all Angels in order.
-3. All other players confirm or challenge before any placement occurs. If any player disputes the read, compare against the printed face map immediately and correct before proceeding.
-4. Once all actions are confirmed aloud by the table, proceed to step 1 of the placement phase.
+**Rule 7.9 — Multi-Angel Resolution Ritual.** When multiple Angels are in play, follow this named sequence before any placement begins:
 
-The ritual is mandatory when 2 or more Angels are in play. It may be abbreviated by experienced groups ("Two [N]s — Shield Surge on A, Pressure on B — confirmed?") provided all players explicitly confirm before placement begins. No dice are placed until confirmation is given.
+1. The **Lead Player** reads the median die face aloud: *"The die shows [N]."*
+2. For each Angel in order (A, B…), read each active slot that includes face N in its trigger set: *"Angel A — Head fires: [action]. Body fires: [action]. Weapon: silent."* Then repeat for Angel B.
+3. All other players confirm or challenge before any placement occurs.
+4. Once all firing slots are confirmed aloud by the table, proceed to placement.
 
-**Physical board UX note (downstream requirement for component design):** When the Component Design spec for Angel boards is authored, it must accommodate the multi-Angel resolution ritual. Required considerations: (a) face index numbers must be large enough to cross-reference across multiple boards from a seated position; (b) a reference card or rulebook sidebar should print the ritual as a step-by-step prompt; (c) consider a player-aid insert for encounters with 3+ Angels. This requirement is owned by the Component Design spec — the Angel System defines the requirement; that spec defines the solution.
+The ritual is mandatory when 2 or more Angels are in play. Experienced groups may abbreviate it provided all players explicitly confirm before placement begins.
 
 ---
 
 ### States and Transitions
 
-**Angel Layer States**
+**Slot States**
 
-| State | Condition | Face Map Active? | HP Visible? |
+| State | Condition | Trigger Set Active? | Tracker Present? |
 |---|---|---|---|
-| **Hidden** | In stack beneath the Exposed layer | No | No — face-down |
-| **Exposed** | Currently active top card | Yes | Yes |
-| **Stripped** | Tracker met effective threshold; card removed to Stripped Pile | No | Yes — Stripped Pile, face-up |
-| **Cleared** | All layers Stripped | — | — |
+| **Active** | Slot has ≥ 1 remaining layer card | Yes — current Exposed layer's trigger set and action apply | Yes |
+| **Inert** | All layer cards in this slot have been stripped | No — die results never trigger this slot | No — tracker removed |
+
+**Layer States (within an Active slot)**
+
+| State | Condition | Action Readable? | HP Readable? |
+|---|---|---|---|
+| **Hidden** | In stack beneath the Exposed layer of this slot | No — face-down | No — face-down |
+| **Exposed** | Current top card of the slot column | Yes | Yes |
+| **Stripped** | Tracker met effective threshold; card removed to face-up reference pile | No | Yes — reference pile, face-up |
 
 **Per-Turn Flow (Angel System scope)**
 
 ```
 Angel Roll Phase
   → Roll 3D6. Sort low→high. Median face committed and revealed to all.
-  → For each Angel: read Exposed layer face map at committed face.
-  → Announce all face-map actions (Angel A, then Angel B, in encounter-card order).
+  → For each Angel, for each active slot: check if median face ∈ slot's trigger set.
+  → Announce all triggering slots (Angel A: Head fires / Body fires / Weapon silent, etc.)
 
 Start of Effect Resolution Phase
-  → Announce all active BUFF values (effective threshold = HP_L + BUFF for this turn).
-  → Announce all active PRS constraints (apply for this phase only).
-  → Players resolve placed-die effects; damage targets declared per effect.
-  → Each Angel's Damage Tracker Die advances as targeted damage accrues.
+  → Announce all BUFF values from triggering slots (raise HP_eff for those slots).
+  → Announce all PRS constraints from triggering slots (apply for this phase only).
+  → Players resolve placed-die effects; damage target declared as [Angel + Slot] per effect.
+  → Each slot's Slot Tracker Die advances as targeted damage accrues.
 
-End of Effect Resolution Phase (strip checks — one per Angel, independent)
-  → For each Angel:
-       If tracker ≥ effective threshold → Stripped: card to Stripped Pile; next layer revealed.
-       If tracker < threshold → layer survives. Tracker resets to zero.
-  → Angel Cleared check: if no layers remain → Cleared → Win/Loss check immediately.
+End of Effect Resolution Phase (strip checks — per slot, independent)
+  → For each Angel, for each active slot:
+       If tracker ≥ HP_eff (HP_L + active BUFF for this slot) → Stripped: remove card; next
+       layer revealed; reset Slot Tracker to 0. If no next card: slot is Inert.
+       If tracker < HP_eff → layer survives; reset Slot Tracker to 0.
+  → Penetrating exception (if active): excess carries within same slot; cascade
+       strip checks fire outermost-first within that slot.
+  → Angel Cleared check: if all slots Inert → Cleared → Win/Loss check immediately.
 
 Angel Resolution Phase
-  → For each Angel in resolution order:
-       Resolve HIT: party routes hits per Integrity System routing rules.
-       Resolve SRG: resolve base hits; evaluate escalation clause; resolve additional hits if met.
+  → For each Angel in encounter order:
+       For each active slot in slot order (Head → Body → Weapon):
+         If slot triggered HIT this round: party routes hits per Integrity System.
+         If slot triggered SRG: resolve base hits; evaluate escalation; resolve additional.
   → Round ends.
 ```
 
@@ -213,20 +272,21 @@ Angel Resolution Phase
 
 | System | Direction | Data / Event | Notes |
 |---|---|---|---|
-| **Dice Economy** | Inbound | Median face value from 3D6 roll (P_angel) | Dice Economy owns the roll and probability model. Angel System maps the median to an action via the face map. |
-| **Integrity System** | Inbound | HP bounds formula: HP_min = ⌈0.6 × D_agg⌉, HP_max = ⌊1.2 × D_agg⌋ | All Angel layer HP values must satisfy these bounds for their target party size. MVP bounds (n=2): [10, 19]. |
-| **Integrity System** | Inbound | Hit type definitions: Party hit / Targeted hit | Angel face maps use exactly these two hit types. No other hit grammar is valid. |
-| **Integrity System** | Outbound | Hit count and type per face-map action | Integrity System receives and applies routing rules. Angel System does not own routing. |
-| **Integrity System** | Outbound | "Layer stripped" event (which layer, which Angel) | Strip trigger per Integrity System Rule 18. |
-| **Integrity System** | Outbound | "Angel Cleared" event (per Angel) | Final strip triggers this per Angel. Win/Loss check fires via Integrity System. |
-| **Combat System** | Inbound | Phase sequence (Angel Roll → Effect Resolution → Angel Resolution) | Angel System rules execute within Combat System's phase structure. |
-| **Win/Loss Conditions** | Outbound | "Angel Cleared" trigger (via Integrity System) | Win/Loss owns the consequence. |
-| **Equipment System** | Indirect via PRS | PRS may restrict placement on specific slot types for one turn | Equipment System must handle an externally-imposed placement restriction. |
-| **Character System** | Outbound (indirect) | H_pt (expected hits per turn per player) | Derivable from WAS formula; used by Integrity System's T_board verification when authoring Character System. |
+| **Dice Economy** | Inbound | Median face value from 3D6 roll (P_angel probability table) | Dice Economy owns the roll. Angel System reads each active slot's trigger set against the median. |
+| **Integrity System** | Inbound | HP calibration baseline: D_player_base = 8, D_agg = 16 (n=2) | Old HP_min/HP_max bounds formula no longer governs per-slot HP. Per-slot HP is frequency-weighted (see Formula 2). The Integrity System's two-die tracking rule applies per Slot Tracker Die. |
+| **Integrity System** | Inbound | Hit type definitions: Party hit / Targeted hit | Angel slot actions use exactly these two hit types. No other hit grammar is valid. |
+| **Integrity System** | Outbound | Hit count and type per triggering slot action | Integrity System receives and applies routing rules. Angel System does not own routing. |
+| **Integrity System** | Outbound | "Slot Inerted" event (which slot, which Angel) | When a slot strips its last layer. |
+| **Integrity System** | Outbound | "Angel Cleared" event (per Angel) | When all 3 slots of an Angel are Inert. Win/Loss check fires via Integrity System. |
+| **Combat System** | Inbound | Phase sequence (Angel Roll → Effect Resolution → Angel Resolution) | Angel System rules execute within Combat System's phase structure. Damage declaration step requires: declare Angel + slot, then advance tracker. |
+| **Win/Loss Conditions** | Outbound | "Angel Cleared" trigger | Win/Loss owns the consequence. Cleared = all 3 slots Inert. |
+| **Equipment System** | Indirect via PRS | PRS may restrict placement on specific player slot types (Head/Body/Weapon) for one turn | Equipment System must handle externally-imposed placement restrictions. PRS applies to player board slots — these share naming convention with Angel board slots but are structurally separate. |
+| **Character System** | Inbound / Outbound | Penetrating (Pilgrim ability): within-slot cascade — excess carries to next layer of the same slot only | Character System Rule 11 defines Penetrating. Angel System Rule 6.6 governs how the cascade resolves within the slot. Cross-slot penetration does not exist. |
+| **Character System** | Outbound | H_pt (expected hits per player per turn) derivable from slot WAS calculations | H_pt_total = (1/n) × Σ_i P_angel(i) × Σ_active_slots C_slot(i). Used by Character System for T_board verification. |
 
 ## Formulas
 
-*These formulas are design tools for Angel card authors and encounter designers. None are computed at the table. All derive from locked constants in the Dice Economy and Integrity System GDDs.*
+*Design tools for Angel card authors and encounter designers. None computed at the table. All derive from locked constants in the Dice Economy and Integrity System GDDs.*
 
 **Locked upstream inputs:**
 
@@ -235,169 +295,148 @@ Angel Resolution Phase
 | P_angel(1), P_angel(6) | 0.074 | Dice Economy |
 | P_angel(2), P_angel(5) | 0.185 | Dice Economy |
 | P_angel(3), P_angel(4) | 0.241 | Dice Economy |
-| D_agg (MVP, n=2) | 16 | Integrity System |
 | D_player_base | 8 | Integrity System |
-| HP_min (MVP) | 10 | Integrity System |
-| HP_max (MVP) | 19 | Integrity System |
+| D_agg(n) | n × 8 | Integrity System |
 
 ---
 
-### Formula 1 — WAS: Weighted Average Severity
+### Formula 1 — WAS_slot_Lk: Weighted Average Severity per Layer
 
-The `WAS` formula is defined as:
+Each layer card has its own trigger set and action. WAS is calculated per layer:
 
-`WAS = Σ (P_angel(i) × S_i)` for i = 1 to 6
+`WAS_slot_Lk = F_slot_Lk × S_slot_Lk`
+
+where `F_slot_Lk = Σ P_angel(i)` for i in layer k's trigger set.
 
 **Variables:**
 
 | Variable | Symbol | Type | Range | Description |
 |---|---|---|---|---|
-| Angel face index | i | int | {1–6} | The die face being evaluated |
-| Face probability | P_angel(i) | float | {0.074, 0.185, 0.241, 0.241, 0.185, 0.074} | Probability the Angel's 3D6 median shows face i; locked from Dice Economy |
-| Severity score | S_i | int | {0–5} | Severity of the action on face i; see scale below |
-| Weighted Average Severity | WAS | float | [0.0, 5.0] | Expected severity per turn for this layer |
+| Layer trigger probability | F_slot_Lk | float | [0.074, 0.963] | Sum of P_angel(i) for faces in this layer's trigger set |
+| Layer severity score | S_slot_Lk | int | {0–5} | Severity of this layer's single action |
+| Layer WAS | WAS_slot_Lk | float | [0, 5.0] | Expected severity contribution when this layer is Exposed |
 
 **Severity scale:**
 
 | Score | Action class | Example |
 |---|---|---|
-| 0 | Light BUFF or light PRS | BUFF +2; "Weapon slots resolve last" |
+| 0 | Light BUFF or PRS | BUFF +2 |
 | 1 | Significant PRS | "Head slots may not receive dice this turn" |
 | 2 | HIT: 1 party hit | 1 freely-routed hit |
 | 3 | HIT: 1 targeted hit or heavy BUFF | "Hit: player with fewest layers"; BUFF +5 |
 | 4 | HIT: 2 party hits | 2 freely-routed hits |
 | 5 | SRG | Escalating 2+ hits |
 
-**WAS design bands:**
+**Escalation design guideline (not a hard rule):** Inner layers are encouraged to escalate relative to the layer above — by widening the trigger set, increasing severity, or both. Any single escalation axis is valid; a layer that escalates only in frequency (same action, fires more often) is as legitimate as one that escalates only in severity (same trigger set, harder hit). Flat layers (identical trigger set and severity to the outer layer) are permitted but offer no revelation moment on strip.
 
-| WAS Band | Design Intent |
-|---|---|
-| < 1.5 | Passive — light pressure. Valid for outer layer of a boss Angel. |
-| 1.5–2.5 | Balanced — sustained threat. Target for most MVP layers. |
-| 2.5–3.5 | Aggressive — valid for inner layers and hard Angels. |
-| > 3.5 | Degenerate — party cannot plan. Do not publish. |
+**Example (Body slot, 2 layers):**
+- L1: trigger {4}, action = HIT:1 party hit → F=0.241, S=2 → `WAS_body_L1 = 0.482`
+- L2: trigger {2,4,5}, action = HIT:2 party hits → F=0.611, S=4 → `WAS_body_L2 = 2.444`
 
-**Output Range:** WAS ∈ [0, 5] theoretical; publishable band [1.5, 3.5].
-
-**Example:** Face map with BUFF (face 1, S=0), PRS (face 2, S=1), HIT-1-party (faces 3+4, S=2), HIT-1-targeted (face 5, S=3), SRG-2+1 (face 6, S=5):
-
-`WAS = (0.074×0) + (0.185×1) + (0.241×2) + (0.241×2) + (0.185×3) + (0.074×5) = 2.074` → Balanced ✓
+L2 is 5× more threatening than L1. Both axes escalated — this is the strongest revelation moment.
 
 ---
 
-### Formula 2 — H_pt: Expected Hits per Player per Turn
+### Formula 2 — WAS_total and HP Calibration
 
-The `H_pt` formula is defined as:
+**Total Angel WAS at a given encounter state:**
 
-`H_pt = [Σ (P_angel(i) × C_i)] / n` for i = 1 to 6
+`WAS_total = Σ WAS_slot_Lk` for all active slots at their currently Exposed layer k.
 
-**Variables:**
+WAS_total increases as the encounter progresses (inner layers exposed). Track WAS_total at each encounter state:
 
-| Variable | Symbol | Type | Range | Description |
-|---|---|---|---|---|
-| Face probability | P_angel(i) | float | see above | Probability of median face i; locked from Dice Economy |
-| Expected hits for face i | C_i | float | [0, ~4] | Hit count delivered when face i fires; derived from action type (see below) |
-| Party size | n | int | {1–4} | Active players; assume uniform hit distribution for the baseline formula |
-| Hits per player per turn | H_pt | float | [0, ~2] | Expected hits received by one player per turn at uniform routing |
-
-**Deriving C_i by action type:**
-
-| Action | C_i |
+| Encounter State | WAS_total Target |
 |---|---|
-| BUFF (any value) | 0 |
-| PRS (any type) | 0 |
-| HIT: 1 party or targeted hit | 1 |
-| HIT: 2 party hits | 2 |
-| SRG | base_hits + P(escalation) × escalation_hits; use P(escalation) = 0.5 unless structurally known |
+| All outer layers (L1) Exposed | 1.5 – 2.5 (opening pressure) |
+| Mix of L1 and inner layers | 2.0 – 3.0 (mid-fight escalation) |
+| All inner layers, all slots still active | ≤ 3.5 (hard but not degenerate) |
 
-**Output Range:** H_pt ∈ [0.3, 1.5] for publishable layers at MVP (n=2). Use H_pt (not WAS) when verifying T_board in the Character System GDD — BUFF and PRS contribute to WAS but deliver 0 hits.
+**HP calibration — severity-weighted, fixed at print:**
 
-**Example** (same face map as Formula 1, n=2, inner layer where SRG always escalates):
+HP values are printed on cards and never change. Party-size scaling is handled entirely by encounter card design — not by different card variants or HP adjustments (see Formula 3).
 
-E_hits = (0.074×0) + (0.185×0) + (0.241×1) + (0.241×1) + (0.185×1) + (0.074×2) = 0.815 hits/turn (party total)
+Per-slot HP protection level is set by the slot's **inner layer WAS** (peak threat):
 
-`H_pt = 0.815 / 2 = 0.408 hits per player per turn`
+| Protection Level | Inner Layer WAS | HP per layer | Design Role |
+|---|---|---|---|
+| **High** | WAS_inner ≥ 2.5 | Outer: 7–10 HP, Inner: 10–14 HP | Hardest to silence; rewards sustained investment |
+| **Medium** | WAS_inner 1.5–2.4 | Outer: 5–7 HP, Inner: 7–10 HP | Standard threat; focus opportunistically |
+| **Low** | WAS_inner < 1.5 | Outer: 4–5 HP, Inner: 5–7 HP | Easiest to inert; quick action economy win |
 
-T_board cross-check: character with L_total = 6 → `T_board = 6 / 0.408 = 14.7 turns` — survives well beyond a 6–8 turn encounter. Inner layers with heavier face maps push H_pt toward 1.0–1.5.
+**Layer depth HP escalation within a slot:**
+- L1 (outer): `HP_L1 = protection_mid × 0.6` (rounded up to nearest integer)
+- L2: `HP_L2 = protection_mid × 1.0`
+- L3 (innermost, if present): `HP_L3 = protection_mid × 1.4`
 
-**[PENDING: Character System]** — When Character System GDD defines L_total per character, verify T_board = L_total / H_pt ≥ encounter length at each Angel's H_pt. Evaluate at both uniform routing (baseline) and worst-case routing (all hits directed at one player).
+*Where protection_mid is the midpoint of the slot's protection level HP bracket.*
+
+**Output Range:** HP_slot_Lk ∈ [4, 14] for all published MVP cards.
 
 ---
 
-### Formula 3 — BUFF Effective Threshold
+### Formula 3 — Party-Size Scaling (Layers and Angels)
 
-The effective HP threshold for this turn when a BUFF fires is defined as:
+HP values on cards are fixed. Party-size scaling is achieved entirely through encounter card design — by specifying how many layer cards to place per slot, and how many Angels to deploy. No card variants or dynamic HP values are required.
 
-`HP_eff = HP_L + BUFF_value` (this turn only)
+**Layer count per slot (same card pool, different stack depth):**
 
-The layer is stripped this turn if and only if: `D_turn ≥ HP_eff`
+| Party Size | Layers per Slot | Total Strip Events (1 angel) | Design Effect |
+|---|---|---|---|
+| n=2 | 2 layers | 6 | Standard encounter depth |
+| n=3–4 | 3 layers | 9 | 1 additional inner layer per slot; encounter runs longer; escalation curve more pronounced |
 
-**Variables:**
+**Angel count (additive complexity):**
 
-| Variable | Symbol | Type | Range | Description |
-|---|---|---|---|---|
-| Printed layer HP | HP_L | int | [10, 19] (MVP) | HP value printed on the card — does not change |
-| BUFF value | BUFF_value | int | [1, HP_max − HP_L] | Amount added to HP_L for this turn only; printed on card as "+X" |
-| Effective threshold | HP_eff | int | [HP_min+1, HP_max] | The threshold the party's damage total must meet or exceed to strip this turn |
-
-**Safe BUFF range:** `BUFF_value ≤ HP_max − HP_L`
-
-| HP_L | Max safe BUFF | Notes |
+| Party Size | Angels in Encounter | Effect |
 |---|---|---|
-| 10 | ≤ 9 | Wide room |
-| 14 | ≤ 5 | Meaningful tension |
-| 16 | ≤ 3 | Significantly impedes stripping |
-| 18 | ≤ 1 | BUFF +1 only |
-| 19 | 0 | No BUFF permitted — already at HP_max |
+| n=2 | 1 angel | Clean focus-fire decisions |
+| n=3–4 | 1–2 angels (encounter-card choice) | More targets; damage-split decisions; coordination load increases |
 
-**Design rule:** Do not assign BUFF to a layer where HP_L = HP_max (19 at MVP). Any BUFF on such a layer is degenerate when it fires.
+**Encounter card format for party-size scaling:**
 
-**Output Range:** HP_eff ∈ [HP_min+1, HP_max] = [11, 19] at MVP. HP_eff is a per-turn value — it never persists to the next round.
+> *"n=2: 1 angel, 2 layers per slot.*
+> *n=3–4: 1 angel, 3 layers per slot  OR  2 angels, 2 layers per slot."*
 
-**Example:** HP_L = 14, face 2 carries BUFF +4 → HP_eff = 18 ≤ 19 ✓. On BUFF turns T_angel(18, 16) ≈ 2.5 turns; on non-BUFF turns T_angel(14, 16) ≈ 1.3 turns. Contrast with degenerate: HP_L = 14, BUFF +8 → HP_eff = 22 > 19. Do not publish.
+The encounter designer chooses which scaling lever to use:
+- **Deeper slots** (more layers): encounter lasts longer; escalation curve more pronounced; same tactical decisions, more turns
+- **More angels** (additional board): more simultaneous threats; damage-split decisions required; higher coordination overhead
+
+At n=3–4 with 3 layers per slot, the L3 card is pulled from the same angel card set as L1 and L2. No additional card variants are needed.
 
 ---
 
-### Formula 4 — Multi-Angel Damage Split Efficiency
+### Formula 4 — H_pt: Expected Hits per Player per Turn
 
-*Design calibration tool for encounter designers. Not computed at the table.*
+`H_pt = (1/n) × Σ_{i=1}^{6} P_angel(i) × Σ_{active slots s} C_s_Lk(i)`
 
-**Setup:** 2 Angels, both HP_L = H. MVP (n=2, D_agg = 16, D_split = 8).
+where `C_s_Lk(i) = [hit count of slot s's Exposed layer action if i ∈ that layer's trigger set; else 0]`
 
-**The `T_focus` formula:**
+**Deriving C_s_Lk(i):**
 
-`T_focus = 2 × T_angel(H, D_agg)`
+| Action | C value |
+|---|---|
+| BUFF or PRS | 0 |
+| HIT: 1 party hit | 1 |
+| HIT: 2 party hits | 2 |
+| SRG | base_hits + P(escalation) × escalation_hits |
 
-**The `T_split` formula:**
+**H_pt arc:** H_pt increases as inner layers expose (wider triggers + higher severity). H_pt decreases only when a slot becomes Inert. The encounter has a natural pressure curve: low opening → escalating mid-fight → relief only when slots are fully silenced.
 
-`T_split = T_angel(H, D_agg / 2)`
+**Fire rate stability check:** For each slot-inert scenario (one slot gone, others at inner layers), verify H_pt_total ≥ 0.3. If H_pt drops below this threshold, the encounter risks dead turns — the angel produces no meaningful threat. Remedy: add 1 trigger face to a remaining slot's inner layer, or increase that layer's severity to S≥2.
 
-**Variables:**
+---
 
-| Variable | Symbol | Type | Range | Description |
-|---|---|---|---|---|
-| Layer HP (both Angels) | H | int | [10, 19] (MVP) | HP on each Angel's Exposed layer |
-| Full party damage | D_agg | float | 16 (MVP) | Party damage per turn; locked from Integrity System |
-| Split damage per Angel | D_split | float | D_agg / 2 = 8 (MVP) | Each Angel's share under even split |
-| Focus total turns | T_focus | float | [2.0, 6.0] | Expected turns to clear both Angels via focus |
-| Split total turns | T_split | float | [T_focus, ∞) | Expected turns under even split — never better than focus |
+### Formula 5 — BUFF Effective Threshold (per slot)
 
-**Comparison table (MVP, D_agg = 16):**
+`HP_eff_slot = HP_slot_Lk + BUFF_value`
 
-| H | T_focus | H/D_split | T_split | Verdict |
-|---|---|---|---|---|
-| 10 | ≈ 2.2 | 1.25 | ≈ 3–4 turns | Focus wins |
-| 14 | ≈ 2.6 | 1.75 | Degenerate (>3t) | Focus wins decisively |
-| 16 | ≈ 3.0 | 2.00 | Impossible range | Focus wins decisively |
+Strip check fires if: `D_slot_turn ≥ HP_eff_slot`
 
-**Key design result:** Within all valid MVP HP bounds, **focus always beats even-split.** The no-carryover rule means partial damage contributes nothing — concentrating fire on one Angel is always more efficient.
+**Safe BUFF range:** `BUFF_value ≤ D_agg(n) − HP_slot_Lk`
 
-**Output Range:** T_focus ∈ [2.0, 6.0] within valid HP bounds. T_split ≥ T_focus always within publishable HP bounds.
+*(Ensures HP_eff never exceeds D_agg — stripping always remains possible with full cooperative focus at the given party size.)*
 
-**Design implication:** HP calibration alone cannot force the party to split attention across two Angels. Encounter designers who want to require sustained split-focus must use one of these tools:
-1. Explicit card rule: "While both Angels are in play, all damage to Angel A is halved"
-2. Asymmetric HP values: give Angels very different HP_L so the party naturally focuses the lighter Angel first while maintaining pressure on the heavier one
-3. SRG escalation on the surviving Angel when the other is cleared (punishes eliminating one Angel too fast)
+**Example (n=2):** Weapon slot L2, HP=12, face {4} carries BUFF+3 → HP_eff=15 ≤ D_agg(2)=16 ✓. On BUFF turns the party needs 15 damage to this slot; on non-BUFF turns 12 suffices.
 
 ## Edge Cases
 
@@ -407,63 +446,81 @@ The layer is stripped this turn if and only if: `D_turn ≥ HP_eff`
 
 ### Strip Check Edge Cases
 
-- **If the Damage Tracker total exactly equals HP_eff**: the layer is stripped. The strip condition is `D_turn ≥ HP_eff`; equality is a passing condition. This is consistent with the Integrity System (AC-06).
+- **If the Slot Tracker total exactly equals HP_eff for a slot**: the layer is stripped. The strip condition is `D_slot_turn ≥ HP_eff`; equality is a passing condition.
 
-- **If a BUFF fires and the tracker total already equals HP_L at the moment of announcement (the party would have stripped without BUFF)**: the BUFF raises the threshold to HP_eff = HP_L + BUFF_value. The strip check fires against HP_eff only. If the tracker reads HP_L and HP_eff > HP_L, the layer survives this turn. BUFF announcements happen at the start of the Effect Resolution Phase before any player dice resolve — the new threshold is in force for the entire phase. There is no "would have stripped" state prior to the check.
+- **If a BUFF fires on a slot and the tracker already equals HP_slot_L at the moment of announcement (the party would have stripped without BUFF)**: the BUFF raises the threshold to HP_eff = HP_slot_L + BUFF_value. The strip check fires against HP_eff only. If the tracker reads HP_slot_L and HP_eff > HP_slot_L, the layer survives this turn. BUFF announcements happen at the start of the Effect Resolution Phase before any player dice resolve — the new threshold is in force for the entire phase.
 
-- **If a BUFF announcement was missed and only discovered after player dice have resolved**: this is a sequencing error. BUFF must be announced before any player dice resolve (Rule 5.1). Reconstruct and replay the Effect Resolution Phase with BUFF in force if the physical state can be recovered. If the state cannot be reconstructed, use the tracker value at the moment the error is discovered compared against HP_eff. This produces the most conservative outcome — the party does not benefit from the error.
+- **If a BUFF announcement for a slot was missed and only discovered after player dice have resolved**: reconstruct and replay the Effect Resolution Phase for that slot with BUFF in force if the physical state can be recovered. If not recoverable, compare the tracker value at the moment of discovery against HP_eff. This produces the most conservative outcome for the party.
 
-- **If the Damage Tracker Die is misread mid-phase**: revert to the last value both players agreed on. If no agreed prior value exists, use the lower of the two claimed values. Consistent with the Integrity System's tracker-dispute ruling.
+- **If the Slot Tracker Die is misread mid-phase**: revert to the last value both players agreed on. If no agreed prior value exists, use the lower of the two claimed values.
+
+- **If the party deals damage to a slot but does not declare the target slot before advancing the tracker**: declare immediately before advancing. If already advanced in error, reassign the tracker advancement to the declared target; do not undo other resolved effects.
+
+---
+
+### Damage Targeting Edge Cases
+
+- **If a player attempts to declare a slot that is already Inert as the damage target**: the declaration is invalid. The player must redirect to an active slot before advancing any tracker. If no active slot exists on that Angel, the Angel is already Cleared — this targeting event should not occur.
+
+- **If two players simultaneously declare different target slots for the same damage effect**: a single damage effect has one source. The active player who controls the effect makes the final declaration. Resolve immediately before advancing any tracker.
 
 ---
 
 ### Layer Transition Edge Cases
 
-- **If the stripped layer is the last card in the Angel's stack (final layer) AND that Angel has a HIT or SRG committed for the Angel Resolution Phase of the same round**: the HIT/SRG is **cancelled**. When an Angel is Cleared (all layers stripped), it ceases to act immediately. No actions fire from a Cleared Angel in the current or any future round. The Win/Loss check fires at the end of the strip check sequence, before the Angel Resolution Phase begins.
+- **If the stripped layer is the last in a slot AND that slot has a HIT or SRG committed for the Angel Resolution Phase of the same round**: the slot is now Inert — the HIT/SRG is **cancelled**. A slot cannot fire in the Angel Resolution Phase if it is Inert. Cancelled hits do not reroute to another slot.
 
-- **If the newly revealed layer's face map shows an action for the same face value that just fired on the stripped layer**: the new face map does NOT fire this round. The Angel's action for this round was determined at the Angel Roll Phase using the Exposed layer's face map at that time. The new layer's face map becomes active from the next Angel Roll Phase onward.
+- **If the newly revealed layer's trigger set includes the same face that just fired on the stripped layer**: the new layer does NOT fire this round. The angel's action for this round was determined at the Angel Roll Phase using the Exposed layer at that time. The new layer's trigger set becomes active from the next Angel Roll Phase onward.
 
-- **If all Angels in a multi-Angel encounter are Cleared on the same turn**: process each Angel's strip check independently. After all checks complete, evaluate the Cleared state for each Angel. If all Angels are Cleared, trigger the Win/Loss check once. The Win/Loss check fires after all strip checks for the turn are complete — not mid-sequence. No Angel Resolution Phase occurs this round (all Angels are Cleared before it would begin).
+- **If all three slots of an Angel become Inert in the same turn**: process each slot's strip check independently. After all checks complete, if all three slots are Inert, trigger the Win/Loss check once. The Win/Loss check fires after all strip checks for the turn are complete — not mid-sequence.
+
+---
+
+### Penetrating Edge Cases
+
+- **If a Penetrating damage event targets a slot's last layer (no next layer exists)**: strip the layer normally. Excess damage is discarded — there is no next layer to cascade into. The slot becomes Inert.
+
+- **If a Penetrating cascade reveals a new layer whose BUFF fired this turn**: recalculate HP_eff fresh for the new layer: `HP_eff_new = HP_Lk_new + BUFF_value` (BUFF_value = 0 unless the new layer's trigger set also includes the face that triggered BUFF — which it usually won't, since BUFF fired on the now-stripped layer card).
+
+- **If a Penetrating event fully Inerts a slot in one turn**: the slot immediately enters the Inert state. Any subsequent dice already placed on that slot column fizzle — the Slot Tracker Die has been removed. Announce "slot Inerted" immediately when the last layer strips.
+
+- **If item departure-trigger damage fires and the Penetrating flag is active**: item departure-trigger damage does not receive the Penetrating flag. Only the die effect that carried the Penetrating condition applies Penetrating to the Angel slot. (Per Character System Rule 11.)
 
 ---
 
 ### BUFF Edge Cases
 
-- **If BUFF fires on a layer where HP_L = HP_max (degenerate BUFF — illegal card)**: this is a card-vetting error. At the table: treat the BUFF as null — announce it, apply nothing. HP_eff = HP_L. Log the defect. The card must be corrected before the next session.
+- **If BUFF fires on a slot the party is not targeting this turn**: the BUFF raises HP_eff on that slot, but with the slot tracker at 0, the strip check trivially fails. The mandatory secondary component (Rule 4.7) still fires in full regardless.
 
-- **If two Angels each have a BUFF face and both fire in the same round**: both BUFFs apply independently to their respective Angels. Each BUFF raises its own Angel's effective threshold for this turn only. Announce both at phase start (Angel A then Angel B, per encounter-card order). Damage targeting remains independent.
-
-- **If BUFF fires but the party's damage total is 0 this turn**: the BUFF is announced, HP_eff is set, and the tracker stays at 0. The end-of-phase check fires (0 ≥ HP_eff is false), the layer survives, and the tracker resets to zero. BUFF does not persist — next turn's threshold reverts to HP_L. **The mandatory secondary component (Rule 4.6) still fires in full** — if the secondary is a PRS, the placement constraint applies for this phase; if the secondary is a HIT/SRG, it resolves in the Angel Resolution Phase. The BUFF threshold component has no effect when damage is 0, but the secondary component always fires regardless.
+- **If two different slots both have a BUFF face that triggers this round**: both BUFFs are announced separately at phase start (Head → Body → Weapon order). Each BUFF raises only its own slot's effective threshold. They do not interact.
 
 ---
 
 ### PRS Edge Cases
 
-- **If a PRS constraint makes it impossible for any player to legally place any die (all slot types are restricted)**: the PRS fires as announced. No die placements occur this Effect Resolution Phase — all players skip placement. The Angel Resolution Phase proceeds normally. A total lockout is legal but extreme. Card authors must verify WAS remains in the publishable band before printing such a constraint.
+- **If a PRS constraint makes it impossible for any player to legally place any die**: the PRS fires as announced. No placements occur this Effect Resolution Phase. The Angel Resolution Phase proceeds normally. A total lockout is legal but extreme; card authors must verify WAS_total remains publishable.
 
-- **If two PRS constraints from different Angels conflict in a way that creates an impossible placement rule (example: Angel A: "Head slots locked" AND Angel B: "Head slots only")**: both constraints apply simultaneously. The combined effect produces a total lockout — no placements are legal this phase. This specific combination is a degenerate encounter design error; the encounter designer must not publish Angel sets whose PRS faces can combine this way. Log as a design defect if it occurs in playtesting.
+- **If two PRS constraints from different slots conflict and produce an impossible combination**: both fire as announced. The combined effect is a total lockout. This is a degenerate encounter design error — the encounter designer must verify that no combination of their slots' PRS faces can create mutual exclusion. Log as a design defect if discovered in playtesting.
 
-- **If a PRS restricts a slot type that no player currently has active (all such slots are inert)**: the PRS fires as announced but has no practical effect. The party proceeds with all remaining legal placements as normal. A constraint that affects no reachable state is vacuously satisfied.
+- **If a PRS restricts a player slot type that no player currently has active (all such player slots are inert)**: the PRS fires as announced but has no practical effect. The party proceeds with all remaining legal placements.
 
 ---
 
 ### Multi-Angel Edge Cases
 
-- **If one Angel is Cleared during the strip check and the surviving Angel still has a HIT or SRG action to fire**: the surviving Angel fires its hits normally. The Cleared Angel fires nothing (its actions are cancelled on Cleared, per the layer transition ruling above). Hit resolution order continues from the surviving Angel only.
+- **If one Angel is Cleared during the strip check and the surviving Angel still has active slots with HIT/SRG committed**: the surviving Angel fires its hits normally. The Cleared Angel fires nothing.
 
-- **If an encounter card's hit resolution order is missing or unclear**: the party declares the resolution order before the encounter begins, binding for the full encounter (Rule 7.5). If the error is discovered mid-encounter, the party agrees on an order immediately and applies it to all remaining-to-resolve actions in the current round and all future rounds. Already-resolved hits are not reversed. Log as a card-vetting defect.
-
-- **If a Targeted hit specifies a constraint that can only be satisfied by targeting a slot that became inert earlier in the same Angel Resolution Phase**: the hit is wasted. Hit eligibility is evaluated at the moment of routing — an inert slot at that moment cannot be targeted, and the hit does not reroute. Owned by the Integrity System (targeted-hit-to-inert-slot ruling); Angel System inherits it without modification.
+- **If two Angels share a trigger face and stripping one Angel's slot causes the encounter to end before the other Angel's slot resolves**: process all strip checks in full before any Win/Loss check. Only after all strip checks for the turn are complete does the Win/Loss check fire.
 
 ---
 
-### Face Map / Card Error Edge Cases (Physical Prototype)
+### Card Error Edge Cases (Physical Prototype)
 
-- **If an Angel layer card has a face with no action printed**: treat that face as a null action — the Angel does nothing this round. Announce it explicitly: "Face [N]: no action." Log as a card-vetting defect. Do not retroactively assign an action at the table.
+- **If a slot layer card has a trigger set printed but no action printed**: treat as a null action — announce "Slot fires: no action." Log as a card-vetting defect.
 
-- **If a face map contains more than 3 action types (violating Rule 4.1)**: use the face map as printed. Resolve all printed actions in sequence per Rule 5.3. Log as a card-vetting defect. Post-session, reduce the face map to at most 3 action types and re-derive WAS.
+- **If HP on a slot layer card is 0 or negative**: treat as HP = 4 (HP_floor). Announce the substitution. Log as a card-vetting defect.
 
-- **If HP_L on a card is 0 or negative**: this is an illegal card. Treat it as HP_L = HP_min for the encounter's target party size (10 at MVP). Announce the substitution to all players. Log as a card-vetting defect requiring correction before the next session.
+- **If a slot layer card is placed in the wrong slot column**: correct immediately when discovered. If discovered mid-encounter, move the card to its correct column and layer position, and treat all prior actions as if it had been correctly placed throughout.
 
 ## Dependencies
 
@@ -471,89 +528,75 @@ The layer is stripped this turn if and only if: `D_turn ≥ HP_eff`
 
 | System | Dependency Type | What the Angel System Consumes |
 |---|---|---|
-| **Dice Economy** | Hard | 3D6 median roll mechanic and P_angel probability table (used for WAS calibration and face assignment design); E_angel = 3.5; the rule that Angel result is revealed before player placement; the rule that Angel resolution fires after all player effects |
-| **Integrity System** | Hard | HP bounds formula (HP_min, HP_max, HP_alpha = 0.6, HP_beta = 1.2); D_agg calibration baseline (D_player_base = 8); T_angel formula (target 1.0–3.0 turns per layer); hit type definitions (Party hit / Targeted hit); no-carryover rule; two-die damage tracker model; targeted-hit-to-inert-slot ruling |
+| **Dice Economy** | Hard | 3D6 median roll mechanic and P_angel probability table (used for WAS_slot_Lk calculation and trigger set design); E_angel = 3.5; the rule that Angel result is revealed before player placement; the rule that Angel resolution fires after all player effects |
+| **Integrity System** | Hard | D_player_base = 8 and D_agg(n) = n×8 (used for HP calibration and BUFF safe-range formula); hit type definitions (Party hit / Targeted hit); no-carryover rule (slot tracker resets each turn); two-die damage tracker model (applies per Slot Tracker Die); targeted-hit-to-inert-slot ruling |
+
+*Note: The old HP bounds formula (HP_min/HP_max based on HP_alpha/HP_beta) no longer governs Angel slot HP. Per-slot HP is calibrated via the severity-weighted Formula 2 in this GDD, using D_player_base and D_agg as anchors only.*
 
 **Downstream dependents** (systems that depend on this one):
 
 | System | Dependency Type | What They Consume |
 |---|---|---|
-| **Combat System** | Hard | Full Angel action resolution sequence (Angel Roll Phase → BUFF/PRS at Effect Resolution Phase start → strip check at phase end → HIT/SRG in Angel Resolution Phase); multi-Angel shared-roll rule; Cleared-Angel-cancels-actions rule. Combat owns the phase structure; Angel System defines the rules within it. |
-| **Character System** | Hard | H_pt (expected hits per player per turn) derived from each Angel's face map via Formula 2. Used in T_board = L_total / H_pt. Must be evaluated at both uniform routing (baseline) and worst-case routing (all hits directed at one player). |
-| **Win/Loss Conditions** | Hard | "Angel Cleared" trigger — when all layers of an Angel are stripped, Win/Loss is notified. Win/Loss owns the consequence. Cross-system timing note: the Win/Loss check fires before the Angel Resolution Phase begins in the same round (Cleared Angel cancels remaining actions). |
-| **Equipment System** | Soft | PRS actions may restrict dice placement on specific slot types for one turn. Equipment System must handle externally-imposed placement restrictions. |
-| **Events System** | Soft (provisional) | The Events System (not yet designed) will pull Angel boards from the Angel deck for encounter events. Encounter cards must state how many Angels per party size (Rule 2 of Detailed Design). This dependency is provisional — confirm when the Events System GDD is authored. |
+| **Combat System** | Hard | Full Angel action resolution sequence (Angel Roll Phase → BUFF/PRS at Effect Resolution Phase start → per-slot strip checks at phase end → HIT/SRG in Angel Resolution Phase); multi-Angel shared-roll rule; Cleared-Angel-cancels-actions rule; damage declaration format (Angel + slot). Combat owns the phase structure; Angel System defines the rules within it. |
+| **Character System** | Hard | H_pt (expected hits per player per turn) derived from each Angel's per-slot trigger sets and layer actions via Formula 4. Penetrating is slot-scoped (Rule 6.6) — Character System must reflect this in Pilgrim's ability description. |
+| **Win/Loss Conditions** | Hard | "Angel Cleared" trigger — when all three slots of an Angel are Inert, Win/Loss is notified. Cleared = all slots Inert (not simply all layers stripped of a single stack). Win/Loss check fires before the Angel Resolution Phase begins in the same round. |
+| **Equipment System** | Soft | PRS actions may restrict player dice placement on specific slot types (Head/Body/Weapon) for one turn. Equipment System must handle externally-imposed placement restrictions. |
+| **Events System** | Soft (provisional) | The Events System pulls Angel boards from the Angel deck for encounter events. Encounter cards must state: Angel count per party size, layers per slot per party size, and hit resolution order for multi-Angel encounters. This dependency is provisional — confirm when the Events System GDD is authored. |
 
 **Bidirectional consistency notes:**
-- When the **Combat System GDD** is authored, it must list the Angel System as a dependency and reference the Angel Roll Phase action sequence as defined here.
-- When the **Character System GDD** is authored, it must list the Angel System as a dependency and use the H_pt formula (Formula 2) to verify T_board for each character at each Angel's face map.
-- When the **Win/Loss Conditions GDD** is updated, it must reflect the "Cleared Angel cancels remaining actions" timing rule and the pre-Angel-Resolution-Phase Win/Loss check.
-- The **Dice Economy GDD** listed the Angel System as a pending `referenced_by` entry in the entity registry — update after this GDD is complete.
-- The **Integrity System GDD** listed the Angel System as a pending `referenced_by` entry in the entity registry — update after this GDD is complete.
+- **Combat System GDD** must update the damage declaration step to require Angel + slot targeting declaration.
+- **Character System GDD** must update Penetrating (Pilgrim Rule 11) to reflect within-slot cascade only — cross-slot penetration does not exist.
+- **Win/Loss Conditions GDD** must reflect the updated Cleared definition: all three slots Inert (not all layers of a single HP stack).
+- **Integrity System GDD**: the old HP bounds formula (HP_min/HP_max) no longer applies to Angels — note this distinction when that GDD is next reviewed.
 
 ## Tuning Knobs
 
-**1. Angel Layer HP (HP_L)**
+**1. HP per slot layer (HP_slot_Lk)**
 - **Adjusts**: How long a layer takes to strip; encounter pacing tension
-- **Safe range**: HP_min to HP_max for the target party size. At MVP (n=2): [10, 19]
-- **Too low (HP_L < HP_min)**: Layer strips trivially on most turns; no tension; layers feel like speed bumps
-- **Too high (HP_L > HP_max)**: T_angel > 3 turns; encounter runs long; violates 5–8 minute target
-- **Source formula**: HP bounds formula (Integrity System GDD)
-- **Owned by**: Angel System. Affects: Integrity System (T_angel), Character System (T_board via H_pt)
+- **Safe range**: [4, 14] for all published MVP cards. Outer layers: [4, 10]. Inner layers: [7, 14].
+- **Too low (< 4)**: Layer strips trivially — one player solos it in any turn; no cooperative decision required; action economy disrupted too easily
+- **Too high (> 14)**: Layer takes 2+ focused turns to strip; encounter runs long; inner layers feel impassable
+- **Source formula**: Formula 2 (HP calibration — severity-weighted)
 
-**2. Layer Count per Angel (1–4 layers)**
-- **Adjusts**: Total encounter length; number of face-map-change moments per fight
-- **Safe range**: 1–4 layers
-- **At 1 layer**: Single-threshold encounter; high-stakes but no escalation arc. Best for skirmish Angels
-- **At 3 layers**: Standard — three phases of escalation. Target for most MVP Angels
-- **At 4 layers**: Long encounter; requires low HP_L per layer to stay within 5–8 minutes; reserve for the final boss
-- **Interaction**: Affects total H_pt accumulation across the encounter; Character System must verify T_board at worst-case H_pt of the Angel's inner layers
+**2. Trigger set size per layer (F_slot_Lk)**
+- **Adjusts**: How often a slot fires; baseline pressure from this slot per turn
+- **Safe range**: F ∈ [0.074, 0.963]. Outer layers: F ≤ 0.50. Inner layers: F ≥ outer layer F.
+- **Too narrow (F < 0.074)**: Slot effectively never fires; wastes a slot column
+- **Too wide on outer layer (F > 0.65)**: Angel fires frequently from turn 1; no escalation arc; inner layers feel flat by comparison
+- **Design guideline**: Inner layer F ≥ outer layer F (at least one additional trigger face on each deeper layer)
 
-**3. WAS per Layer**
-- **Adjusts**: How threatening a layer is on average; party pressure per turn
-- **Safe range**: [1.5, 3.5]
-- **Too low (WAS < 1.5)**: Layer feels passive; party faces little pressure; encounters drag
-- **Too high (WAS > 3.5)**: Degenerate — party cannot plan or recover; routing collapses
-- **Escalation pattern**: WAS should increase from outer to inner layers on the same Angel. At minimum, the final layer must have the highest WAS.
-- **Source formula**: Formula 1 (this GDD)
+**3. Severity per layer (S_slot_Lk)**
+- **Adjusts**: How punishing a slot's action is when it fires
+- **Safe range**: S ∈ {0–5}. Outer layers: S ≤ 3. Inner layers: S ≤ 5.
+- **Too low on inner layer (S ≤ 1 on innermost)**: No escalation moment; inner reveal is flat; violates the revelation fantasy
+- **Too high on outer layer (S = 5 from round 1)**: Party under maximum pressure immediately; no mid-fight escalation; violates WAS_total starting band [1.5, 2.5]
+- **Interaction with trigger set**: WAS_slot_Lk = F × S. High F + high S on the same layer is an escalation spike — ensure WAS_total stays ≤ 3.5
 
-**4. BUFF Value (BUFF_value)**
+**4. Layer count per slot**
+- **Adjusts**: Encounter duration and revelation arc depth
+- **Safe range**: 2 layers minimum (1-layer slots are too easily inerted); 3–4 layers for major encounters
+- **At 2 layers**: One revelation moment per slot; 6 total strip events per standard angel; clean and fast; standard for n=2
+- **At 3 layers**: Two revelation moments per slot; 9 total strip events; longer encounter, more escalation arc; standard for n=3–4 encounters
+- **At 4 layers**: Extended encounter; reserve for the God card boss; inner layers must have high WAS or encounter becomes attritional
+
+**5. Number of Angels per Encounter**
+- **Adjusts**: Complexity, coordination load, and damage-split decisions
+- **Safe range**: 1–2 Angels for MVP
+- **At 1 Angel**: Clean focus-fire strategy; cooperative decisions are about slot priority
+- **At 2 Angels**: Adds cross-Angel targeting decisions; each slot strip on Angel A trades against progress on Angel B; HP on individual slots should be reduced to keep encounter within time budget
+- **Design constraint**: Total angel HP across all slots of all Angels in the encounter should stay within ~8 × D_agg to target ≤ 8 turns
+
+**6. BUFF value (BUFF_value)**
 - **Adjusts**: How effectively a BUFF face impedes stripping on that turn
-- **Safe range**: [1, HP_max − HP_L]. At MVP: max BUFF_value = 19 − HP_L
-- **Too low (BUFF_value = 1)**: Near-negligible effect; the face feels wasted
-- **Too high (BUFF_value > HP_max − HP_L)**: Degenerate — layer cannot be stripped on BUFF turns
-- **Interaction**: Frequency matters. BUFF on faces 3/4 (24.1% each) fires often; BUFF on faces 1/6 (7.4% each) fires rarely. A large BUFF on a common face is more punishing than an equivalent BUFF on a rare face.
+- **Safe range**: [1, D_agg(n) − HP_slot_Lk]. At MVP (n=2): max BUFF_value = 16 − HP_slot_Lk
+- **Too low (= 1)**: Near-negligible; the face feels wasted
+- **Too high (> D_agg − HP_slot_Lk)**: Slot cannot be stripped on BUFF turns — degenerate
+- **Frequency interaction**: BUFF on high-F trigger faces fires often. A large BUFF on a common face is more punishing than the same BUFF on a rare face.
 
-**5. Number of Angels per Encounter (scaled by party size)**
-- **Adjusts**: Complexity, coordination load, and damage-split decisions per encounter
-- **Safe range**: 1–2 Angels for MVP. 3+ Angels deferred to Feature-layer.
-- **At 1 Angel**: Standard cooperative focus; clean and fast
-- **At 2 Angels**: Forces damage-split decision each turn; adds coordination load and strategic depth
-- **Design constraint**: HP bounds are calibrated to party size, not total Angel count. A two-Angel encounter with both Angels at HP_max creates effectively double the HP to clear without any increase in D_agg. Reduce HP_L on multi-Angel encounters to compensate. See Formula 4 for the focus vs. split efficiency analysis.
-
-**6. Action Type Distribution per Layer (HIT / SRG / PRS / BUFF)**
-- **Adjusts**: Whether a layer feels aggressive (hit-heavy), defensive (BUFF-heavy), or tactical (PRS-heavy)
-- **Safe range**: Maximum 3 distinct action types per layer; at least 1 HIT or SRG face
-- **All HIT**: Maximum raw hit pressure; party routing is everything; minimal tactical variety
-- **HIT + BUFF heavy**: Encounters where the party must overkill to strip; frustrating if BUFF is on common faces with high BUFF_value
-- **HIT + PRS heavy**: Tactical encounters that punish specific build archetypes; add friction for certain equipment configurations
-- **Too many action types (>3)**: Cognitive overload; violates Fast and Focused
-
-**7. Common Face Severity (Faces 3 and 4)**
-- **Adjusts**: The baseline pressure the party faces on ~48% of rounds
-- **Locked constraint**: Faces 3 and 4 may not both carry Severity ≥ 4 on the same layer (Rule 4.4)
-- **Setting both at Severity 2–3 (HIT-1)**: Steady, readable pressure; party knows the baseline each round
-- **Setting one at Severity 3 and one at Severity 0–1**: Creates a "relief/threat" alternation on the most frequent faces; more variance in the mid-game feel
-- **Setting one at Severity 4 (HIT-2)**: Permitted only if the other is ≤ 3; creates a "usually hard, sometimes brutal" feel on common faces
-
-**Tuning knobs owned by other systems (referenced here for completeness):**
-
-| Knob | Owned By | Relevance to Angel System |
-|---|---|---|
-| D_player_base (8) | Integrity System | Recalibrate all HP_L values if this changes |
-| HP_alpha (0.6) | Integrity System | Changes HP_min for all Angels; recalibrate on update |
-| HP_beta (1.2) | Integrity System | Changes HP_max for all Angels; recalibrate on update |
-| L_total per character | Character System | Affects T_board at this Angel's H_pt; verify after each new Angel is designed |
+**7. Encounter Layer Scaling (party size)**
+- **Adjusts**: Encounter length and difficulty for larger parties
+- **Design levers**: Add 1 layer per slot (n=3–4 variant) OR add a second Angel. Both use the same fixed card pool — no card reprints needed.
+- **Interaction**: Adding a layer deepens the escalation arc; adding an Angel increases parallel threat. Choose based on the encounter's intended feel: "this angel gets more dangerous as it's damaged" (deeper slots) vs. "this encounter is about coordination across threats" (more angels)
 
 ## Visual/Audio Requirements
 
@@ -569,108 +612,92 @@ The layer is stripped this turn if and only if: `D_turn ≥ HP_eff`
 
 ---
 
-**Board Structure**
+**Board Setup**
 
-- **AC-01** — GIVEN an encounter card states "1–2 players: 1 Angel, 3–4 players: 2 Angels" and the party has 3 players, WHEN the encounter is set up, THEN 2 Angel boards are placed in the Angel Zone and 1 Angel board is not.
+- **AC-01** — GIVEN an encounter card states "n=2: 1 angel, 2 layers per slot," WHEN the encounter is set up, THEN the angel board has three slot columns (Head, Body, Weapon), each with exactly 2 layer cards (L1 face-up, L2 face-down), and one Slot Tracker Die placed below each column.
 
-- **AC-02** — GIVEN two Angels are in play, WHEN the Angel Roll Phase begins, THEN exactly one set of 3D6 is rolled. No second dice roll occurs. Each Angel's action for this round is determined by reading face [median] on that Angel's own Exposed layer face map — not by a separate roll.
+- **AC-02** — GIVEN an encounter card states "n=3–4: 1 angel, 3 layers per slot," WHEN the encounter is set up for a 3-player party, THEN each slot column has 3 layer cards (L1 face-up, L2 and L3 face-down) and one Slot Tracker Die per column.
 
-- **AC-03** — GIVEN two Angels are in play, WHEN a player declares damage against Angel A, THEN the tracker die beside Angel A advances. The tracker die beside Angel B does not advance. Trackers are never shared.
-
-- **AC-04** — GIVEN an Angel has received damage totaling 7 in one turn, WHEN the tracker die reaches 6 and more damage accrues, THEN a second spare die is placed alongside it as a tens digit. The combined representation correctly displays the total (tens die = 1, units die = 1 for 11; tens die = 1, units die = 4 for 14, etc.). Both dice reset to zero at end of Effect Resolution Phase.
+- **AC-03** — GIVEN a 2-angel encounter, WHEN the encounter is set up, THEN two complete angel boards are placed in the Angel Zone, each with their own independent slot columns and Slot Tracker Dice.
 
 ---
 
-**Action Timing**
+**Dice Roll and Trigger Reading**
 
-- **AC-05** — GIVEN an Angel layer has BUFF +4 on face 2 and the median die shows 2, WHEN the Effect Resolution Phase begins, THEN the BUFF is announced and the effective HP threshold (HP_eff = HP_L + 4) is stated aloud before any player picks up or resolves any placed die.
+- **AC-04** — GIVEN an angel with Head trigger {1,6}, Body trigger {2,4,5}, Weapon trigger {3,4}, WHEN the median die shows 4, THEN both Body AND Weapon slots fire their respective actions. Head does not fire. The Lead Player announces both firing slots before any placement begins.
 
-- **AC-06** — GIVEN an Angel layer has PRS ("Head slots may not receive dice") on face 3 and the median die shows 3, WHEN the Effect Resolution Phase begins, THEN the PRS constraint is announced before any player picks up or resolves any placed die. No die is placed on a Head slot during this phase.
+- **AC-05** — GIVEN the median die shows a face that is not in any active slot's trigger set, WHEN the Angel Roll Phase resolves, THEN no angel slot fires this round. No BUFF, PRS, HIT, or SRG announces. The party proceeds to placement with no angel pressure this turn.
 
-- **AC-07** — GIVEN an Angel layer has HIT: 1 party hit on face 4 and the median die shows 4, WHEN all player dice effects have resolved at the end of the Effect Resolution Phase, THEN the HIT has not yet fired. The HIT fires in the subsequent Angel Resolution Phase only.
-
-- **AC-08** — GIVEN a face entry reads "PRS: Head slots locked. HIT: 1 party hit", WHEN that face fires this round, THEN the PRS constraint is announced at the start of the Effect Resolution Phase AND the HIT fires in the Angel Resolution Phase — the two components do not fire simultaneously in the same phase.
+- **AC-06** — GIVEN a slot is Inert, WHEN the median die shows a face that was in that slot's original trigger set, THEN the Inert slot produces no action. The face is treated as silent for that slot.
 
 ---
 
-**Strip Check**
+**Damage Targeting**
 
-- **AC-09** — GIVEN an Angel layer has HP_L = 14 and the party deals exactly 14 damage, WHEN the end-of-phase strip check fires, THEN the layer is stripped. (The strip condition is `D_turn ≥ HP_eff`; equality is a passing condition.)
+- **AC-07** — GIVEN two active slots (Body and Weapon) on an Angel, WHEN a player's damage effect fires for 6 damage, THEN the player declares "Angel [name], Body slot" (or Weapon) before advancing any Slot Tracker Die. The 6 damage cannot be split between the two slots.
 
-- **AC-10** — GIVEN an Angel layer has HP_L = 14 and a BUFF +4 fires this turn (HP_eff = 18) and the party deals exactly 14 damage, WHEN the end-of-phase check fires, THEN the layer survives (14 < 18). The BUFF raised the threshold; the damage was not prevented.
-
-- **AC-11** — GIVEN an Angel layer has HP_L = 14 and a BUFF +4 fires this turn (HP_eff = 18) and the party deals exactly 18 damage, WHEN the end-of-phase check fires, THEN the layer is stripped.
-
-- **AC-12** — GIVEN the party deals 14 damage in turn 1 against a layer with HP_L = 16 (layer survives), WHEN turn 2's Angel Roll Phase begins, THEN the Damage Tracker Die reads 0. (No carryover. The reset occurs at the end of turn 1's Effect Resolution Phase regardless of whether the layer survived or was stripped.)
-
-- **AC-13** — GIVEN a BUFF +4 fires in turn 1 (HP_eff = 18) and the layer survives, WHEN turn 2's Angel Roll Phase begins, THEN the effective threshold is HP_L only. BUFF does not persist. HP_eff is recalculated fresh each turn.
-
-- **AC-14** — GIVEN an Angel layer with HP_L = 14 is Exposed and a player's damage effect resolves during the Effect Resolution Phase bringing the tracker to 14, WHEN that effect resolves, THEN the layer does not strip mid-phase. The strip check fires exactly once: at the end of the Effect Resolution Phase, after all placed-die effects have resolved.
+- **AC-08** — GIVEN Body slot tracker reads 5 and Weapon slot tracker reads 3, WHEN a player deals 4 damage to Body, THEN Body tracker advances to 9. Weapon tracker stays at 3. No other tracker is affected.
 
 ---
 
-**Layer Transition**
+**Strip Checks (per slot)**
 
-- **AC-15** — GIVEN an Angel layer is stripped at the end of the Effect Resolution Phase, WHEN the card is removed from the stack, THEN it is placed face-up in the Stripped Pile beside the Angel Zone. Players may consult it at any time.
+- **AC-09** — GIVEN Body slot L1 has HP=8 and the Body Slot Tracker reads 8 at end of Effect Resolution Phase, WHEN the strip check fires, THEN Body L1 is stripped. The L2 card is flipped face-up. The Body Slot Tracker Die resets to 0.
 
-- **AC-16** — GIVEN a layer is stripped and a Hidden layer exists beneath it, WHEN the stripped card is placed in the Stripped Pile, THEN the next card in the stack is physically turned face-up so its HP value and full face map are readable by all players before the Angel Resolution Phase begins.
+- **AC-10** — GIVEN Body slot L1 has HP=8 and Body tracker reads 7, WHEN the strip check fires, THEN Body L1 survives. Body Slot Tracker resets to 0. Head and Weapon trackers also reset independently.
 
-- **AC-17** — GIVEN the old Exposed layer's face 3 action was HIT-1 and the newly revealed layer's face 3 action is SRG, WHEN the newly revealed layer becomes Exposed this round, THEN the SRG does NOT fire this round. The new face map is active from the next Angel Roll Phase onward.
+- **AC-11** — GIVEN Body slot L1 has HP=8, a BUFF+3 fires on Body (HP_eff=11), and the Body tracker reads 8 at end of phase, WHEN the strip check fires, THEN Body L1 survives (8 < 11). The BUFF raised the threshold; the damage was not prevented.
 
-- **AC-18** — GIVEN the last layer of an Angel is stripped during the strip check AND that Angel has a HIT committed for the Angel Resolution Phase this round, WHEN the Angel is Cleared, THEN the HIT is cancelled. No hits are dealt from a Cleared Angel this round or any future round.
-
-- **AC-19** — GIVEN the last layer of an Angel is stripped and the Angel is Cleared, WHEN the strip check resolves, THEN the Win/Loss check fires. If the encounter ends, the Angel Resolution Phase does not occur for this round. If other Angels remain active, those Angels' Angel Resolution Phase actions still resolve.
-
-- **AC-20** — GIVEN an Angel has Hidden layers below the current Exposed layer, WHEN a player attempts to view a Hidden layer card during play, THEN the card remains face-down. Hidden layers may not be read by any player until the layer above them is stripped.
-
-- **AC-21** — GIVEN Angel A is Cleared and Angel B has 1 layer remaining, WHEN Angel A's strip check resolves, THEN the encounter continues. The party must strip Angel B's remaining layer to trigger the Win/Loss check.
+- **AC-12** — GIVEN Body slot L1 has HP=8 and the party deals 12 damage to Body, WHEN the strip check fires, THEN Body L1 strips (12 ≥ 8). The excess 4 damage is discarded (non-Penetrating). Body L2 tracker starts at 0.
 
 ---
 
-**Multi-Angel**
+**Inert State**
 
-- **AC-22** — GIVEN two Angels are in play and a player's damage effect deals 5 damage, WHEN that effect fires, THEN the player declares which Angel receives the 5 damage before either tracker advances. The 5 damage cannot be split between Angels — the full effect targets one Angel only.
+- **AC-13** — GIVEN Body slot L2 is the last layer and strips, WHEN the strip check resolves, THEN Body Slot Tracker Die is removed. The Body column is marked Inert. On all subsequent turns, rolling a face in Body's former trigger set produces no action from Body.
 
-- **AC-23** — GIVEN two Angels are in play and the party allocates damage such that Angel A's tracker reaches its HP_eff but Angel B's tracker does not, WHEN the end-of-phase strip checks fire, THEN Angel A's layer is stripped and Angel B's layer survives. The checks are independent; clearing Angel A does not affect Angel B's tracker or threshold.
+- **AC-14** — GIVEN Head slot is Inert and Body slot is still Active, WHEN the median die shows face 1 (which was in Head's trigger set only), THEN no slot fires this round. The die result is effectively a free turn for the party.
 
-- **AC-24** — GIVEN Angel A is Cleared during the strip check and Angel B has a HIT action committed this round, WHEN the Angel Resolution Phase begins, THEN Angel B resolves its HIT per Integrity System routing rules. Angel A resolves nothing.
-
-- **AC-25** — GIVEN Angel A's face map shows BUFF on the committed face and Angel B's face map shows PRS on the same committed face, WHEN the Effect Resolution Phase begins, THEN Angel A's BUFF is announced first, then Angel B's PRS, and both are in effect simultaneously before any player resolves a die.
-
-- **AC-26** — GIVEN an Angel layer has SRG [2 base hits + 1 hit if condition met] and the condition IS met, WHEN the SRG fires in the Angel Resolution Phase, THEN the party routes the 2 base hits first. Only after the base hits are fully routed is the escalation condition evaluated, and only then do the additional hits fire and are routed. The party does not receive all 3 hits simultaneously.
-
-- **AC-27** — GIVEN an Angel fires HIT: 2 party hits, WHEN the Angel Resolution Phase resolves, THEN the party collectively decides how to distribute the 2 hits across eligible routing targets per Integrity System routing rules. The Angel System does not dictate a specific target.
+- **AC-15** — GIVEN all three slots of an Angel become Inert on the same turn, WHEN all three strip checks resolve, THEN the Angel is Cleared. The Win/Loss check fires immediately. The Angel Resolution Phase does not occur for this Angel this round.
 
 ---
 
-**Face Map Design (card-level validation)**
+**Penetrating (within-slot cascade)**
 
-- **AC-28** — GIVEN a completed Angel layer face map, WHEN a tester lists the distinct action categories used (HIT, SRG, PRS, BUFF — each counted once regardless of how many faces carry it), THEN the count of distinct categories is ≤ 3.
+- **AC-16** — GIVEN Body slot L1 has HP=6 and L2 has HP=10, the Penetrating flag is active, and the party deals 9 damage to Body, WHEN the strip check fires, THEN: Body L1 strips (9 ≥ 6), excess 3 carries to Body L2. Body L2 tracker = 3. If 3 < 10, L2 survives this turn. Body L2 tracker resets to 0 at end of phase.
 
-- **AC-29** — GIVEN a completed Angel layer face map, WHEN a tester checks all 6 faces for action type, THEN at least one face carries HIT or SRG.
+- **AC-17** — GIVEN Body slot L1 has HP=6 and L2 has HP=5, the Penetrating flag is active, and the party deals 12 damage to Body, WHEN the strip check fires, THEN: Body L1 strips (12 ≥ 6), excess 6 carries. Body L2 check: 6 ≥ 5 → Body L2 strips also. Body is Inert in one Penetrating event.
 
-- **AC-30** — GIVEN a completed Angel layer face map, WHEN a tester checks faces 3 and 4, THEN at most one of them carries HIT: 2 party hits or SRG. Both faces 3 and 4 may not simultaneously carry actions in these categories on the same layer.
+- **AC-18** — GIVEN the Penetrating flag is active and Body slot L2 is the last layer, WHEN the cascade reaches L2 and excess damage exceeds HP_L2, THEN L2 strips and the slot is Inert. Excess is discarded — Penetrating does not cross slot boundaries to Head or Weapon.
 
-- **AC-31** — GIVEN an Angel layer card with HP_L printed and a BUFF action with BUFF_value, WHEN a tester checks BUFF_value against the constraint BUFF_value ≤ (19 − HP_L) (where 19 is HP_max at MVP), THEN the constraint is satisfied. A BUFF that would make HP_eff > 19 is an illegal card.
+---
+
+**Slot Trigger Set Reading (multi-slot compound rounds)**
+
+- **AC-19** — GIVEN Head trigger {1,6} carries HIT:2 and Weapon trigger {3,4} carries HIT:1, and the median die shows 4 (4 ∉ Head trigger set {1,6}), WHEN the Angel Resolution Phase resolves, THEN only Weapon's HIT:1 fires. Head's HIT:2 does not fire. The party routes 1 hit only.
+
+- **AC-20** — GIVEN two slots each carry a BUFF action and both slots trigger on face 4, WHEN the median die shows 4, THEN both BUFFs are announced at phase start in slot order (Head → Body → Weapon). Each BUFF raises only its own slot's HP_eff. They do not interact.
 
 ---
 
 **Deferred — Design Tools**
 
-- **AC-34** — GIVEN a completed Angel layer face map with one or more BUFF faces, WHEN a tester inspects each BUFF face entry, THEN every BUFF entry contains a secondary component (a PRS constraint or a HIT/SRG action printed in the same entry). A BUFF entry with no secondary component is an illegal face map entry and must be corrected before print.
+- **AC-21** *(DEFERRED — design tool)* — GIVEN a completed angel slot design, WHEN WAS_total is calculated at each encounter state (all L1 → all L2 → all L3), THEN WAS_total at all-L1 ∈ [1.5, 2.5], at all-L2 ∈ [2.0, 3.0], at all-L3 ≤ 3.5.
 
-- **AC-32** *(DEFERRED — design tool)* — GIVEN a completed Angel layer face map, WHEN WAS is calculated using Formula 1, THEN WAS ∈ [1.5, 3.5] for the layer to be publishable.
+- **AC-22** *(DEFERRED — design tool)* — GIVEN one slot becomes Inert and the other two slots are at inner layers, WHEN H_pt_total is calculated for this encounter state, THEN H_pt_total ≥ 0.3 (no dead-turn risk).
 
-- **AC-33** *(DEFERRED — design tool, pending Character System)* — GIVEN a completed Angel layer face map and a known party size n, WHEN H_pt is calculated using Formula 2, THEN the result is used (not WAS) for T_board verification in the Character System GDD. BUFF and PRS faces correctly contribute C_i = 0; HIT and SRG faces contribute C_i = hit count.
+- **AC-23** *(DEFERRED — design tool)* — GIVEN a completed slot layer card with HP_slot_Lk and BUFF_value, WHEN verified against `BUFF_value ≤ D_agg(n) − HP_slot_Lk`, THEN the constraint is satisfied. A BUFF that makes HP_eff > D_agg(n) is an illegal card at that party size.
 
 ## Open Questions
 
-- **OQ-01 (PENDING: Character System)** — What is D_agg_max (maximum achievable party damage per turn at full build)? Required to fully close the BUFF degenerate condition for HP_L values near HP_max. Owner: Character System GDD. Resolve before finalizing Angel cards with BUFF actions on layers with HP_L ≥ 16.
+- **OQ-01 (PENDING: playtesting)** — Does the hidden-until-strip rule feel fair on a newly revealed slot layer? If the "blind first inner-layer turn" feels arbitrary rather than dramatic, consider previewing the inner layer card once the outer layer is below half HP (flip face-up when outer tracker first exceeds HP_L1/2). Deferred pending playtest data.
 
-- **OQ-02 (PENDING: Character System)** — What is L_total per character (layers per player board)? Required to verify T_board = L_total / H_pt for each character at each Angel's H_pt. Owner: Character System GDD. Evaluate at both uniform routing (baseline) and worst-case routing (all hits to one player).
+- **OQ-02 (PENDING: playtesting)** — Is slot-targeting (declare Angel + slot) engaging or does it create analysis paralysis? The core strategic questions — which slot to focus, when to split vs. coordinate — need playtest validation. Watch for: players always defaulting to the same slot (no decision depth), or players spending >30s per turn debating slot priority (cognitive overload). AC-22 (fire rate stability) should be verified at first playtest.
 
-- **OQ-03 (PENDING: playtesting)** — Does the hidden-until-strip rule feel fair for the first turn on a newly revealed layer? If playtest shows the "blind first turn" feels arbitrary rather than dramatic, consider the preview-at-50%-damage variant (flip the next layer face-up when the current layer first takes ≥ HP_L/2 cumulative damage). AC-33 deferred pending this data.
+- **OQ-03 (PENDING: Events System)** — What is the encounter card format? Must now include: angel count per party size, layers per slot per party size, trigger set for each slot (Head/Body/Weapon) for each angel, hit resolution order for multi-angel encounters, and the layer card set to use. The Events System GDD must define the encounter card anatomy to accommodate all these fields.
 
-- **OQ-04 (PENDING: playtesting)** — Is the damage-split decision for multi-Angel encounters engaging or does it create analysis paralysis? Formula 4 establishes that focus always beats even-split within HP bounds — the strategic question is whether players understand this and find the focus-vs-pressure tradeoff rewarding, or whether two Angels simply doubles cognitive load without adding interesting decisions. Monitor in MVP playtesting.
+- **OQ-04 (PENDING: component design)** — How should trigger sets be displayed on slot layer cards? Options: printed as face numbers ("2 · 4 · 5"), graphical die faces, or a combination. Must be table-readable at 60–100 cm and unambiguous at a glance. Deferred to Component Design spec.
 
-- **OQ-05 (PENDING: Events System)** — What is the encounter card format? The Angel System specifies that encounter cards must state Angel count per party size, hit resolution order (for multi-Angel), and the Angel boards to use. The Events System GDD must define the encounter card anatomy to accommodate these fields.
+- **OQ-05 (RESOLVED — 2026-05-27)** — Penetrating cascade (excess-carries, Rule 6.6) confirmed: total damage output = R; does not multiply by layer count. Pilgrim S_encounter at n=2 base ≈ 37–40 (below band). Resolution: Pilgrim is intentionally item-dependent at n=2; one Type 2 Output Amplification item on Reservoir pushes S_combined to ~54–58 (in band). At n=3–4 with R=18, cascade double-strip (full-slot Inert) achieves band unaided. See character-system.md Tuning Knob 6 and S_encounter Comparison table for full derivation. No changes required to Angel System GDD.
+
+- **OQ-06 (PENDING: playtesting)** — Does the action economy arc (WAS_total increasing as inner layers expose) produce the intended escalation feel, or does the encounter peak too early (all inner layers exposed before players have made progress)? Monitor in MVP playtests: if inner layers expose too fast, increase outer layer HP or reduce inner layer trigger set breadth.

@@ -1,8 +1,8 @@
 # Events System
 
-> **Status**: Designed — CD-GDD-ALIGN: APPROVE (2026-05-26)
+> **Status**: Needs Revision — propagation update from angel-system.md redesign (2026-05-27)
 > **Author**: Federico Gallucci + Claude Code agents
-> **Last Updated**: 2026-05-26
+> **Last Updated**: 2026-05-27
 > **Implements Pillar**: Fast and Focused (primary); The Build is Never Finished (secondary); Cooperative Ownership (supporting)
 
 ## Overview
@@ -70,7 +70,7 @@ Every Event card belongs to exactly one of four types. The type is printed on th
 A card that places one or more Angels in the Angel Zone, triggering a combat encounter.
 
 *Structural resolution procedure:*
-1. Read the card aloud. The card specifies: Angel identity, party-size scaling (1–2 players: N Angel(s); 3–4 players: M Angel(s)), and any encounter-specific special rules.
+1. Read the card aloud. The card specifies: Angel identity, party-size scaling (1–2 players: N Angel(s); 3–4 players: M Angel(s)), and any encounter-specific special rules. *(2026-05-27: The encounter card governs only how many Angels appear per party size. It does NOT specify layers per slot — layer count scaling is owned by the layer cards themselves: each slot layer card carries a "Target Party Size" field [e.g., 2+, 3+, 4+] indicating the minimum party size for that layer to be included. Encounter card format does not change with the Angel System 3-slot redesign.)*
 2. Transfer control to the Combat System (see Rule 4).
 3. The Combat System runs the full 6-phase sequence until the encounter ends.
 4. Control returns to the Events System after the Combat System's cleanup phase completes (see Rule 4).
@@ -124,7 +124,7 @@ A card that delivers a positive non-item effect to one or more players.
 
 When a Type A (Encounter) card is drawn, the following sequence defines which system has control at each moment:
 
-4.1. **Events System owns the draw and read.** The First Player draws the card, reads it aloud, confirms party-size scaling and any special encounter rules. This is the Events System's complete responsibility before handoff.
+4.1. **Events System owns the draw and read.** The First Player draws the card, reads it aloud, confirms party-size scaling (number of Angels active at this party size) and any special encounter rules. This is the Events System's complete responsibility before handoff. *(Layer-per-slot scaling is not declared here — it is resolved during Angel Zone setup by reading the "Target Party Size" field on each slot layer card.)*
 
 4.2. **Events System is suspended at handoff.** After the card is read and acknowledged by the table, control transfers to the Combat System. The Events System is frozen: no draws, no token rotations, no card resolutions occur while the Combat System is active.
 
@@ -253,6 +253,8 @@ The Events System is a sequencing skeleton. It owns no mathematical formulas —
 **If a bad event's slot damage reduces a slot's Integrity to zero, triggering a layer reveal**: the Events System remains in control throughout. Equipment Degradation's reveal procedure executes synchronously as part of the bad event's effect application (Rule 3, Type C, step 2). When the reveal is complete, the Events System continues: scope check, discard, Check C, and token rotation. Equipment Degradation owns the strip and reveal; the Events System owns the sequence before and after.
 
 **If a bad event's slot damage strips a layer that has an item attached**: Equipment Degradation Rule 1, step 3 fires — the item departs with the stripped card immediately, before Check C evaluates. Check C evaluates board state after all effects (including item departure) are fully settled.
+
+**If a bad event strips a layer whose attached item has a departure trigger that deals offensive damage (e.g., "deal 3 damage to the Angel"), and no Angel is present in the Angel Zone during Bad Event resolution**: the departure trigger fires — the item departs normally and the trigger is consumed — but the offensive damage fizzles. No damage is applied, no target is resolved, and no integrity is lost. Bad Event resolution then continues as normal (scope check, discard, Check C, token rotation). *(Rationale: departure triggers are authored for combat context where a valid Angel target always exists. Bad Events are a non-combat context with no Angel in scope. The trigger fires because departure is always unconditional; the damage effect has no legal target and is discarded.)*
 
 ---
 
@@ -488,7 +490,7 @@ The Events System is a sequencing skeleton. It owns no mathematical formulas —
 
 **OQ-2 [DEFERRED → post-MVP]** Boon card design: Type D Boon cards are absent from the MVP deck. When authored, each Boon must be tested against the Player Fantasy design test ("quiet exhale, not cheer"). This is a card authoring constraint, not a GDD rule.
 
-**OQ-3 [DEFERRED → Angel System GDD]** Multi-Angel encounter scaling per card: the Events System reads party-size scaling rules from encounter card text. The Angel System GDD must define the valid range for N and M Angels per tier and verify multi-Angel encounter pacing against EPC.
+**OQ-3 [PARTIALLY RESOLVED 2026-05-27]** Multi-Angel encounter scaling per card: the encounter card specifies how many Angels appear (N at 1–2 players; M at 3–4 players) — this is the only party-size information on the encounter card. Layer-per-slot scaling is governed by the "Target Party Size" field on each slot layer card (Angel System redesign, 2026-05-27). The Angel System GDD must define the valid range for N and M Angels per tier and verify multi-Angel encounter pacing against EPC.
 
 **OQ-4 [RESOLVED → 2026-05-26]** Win/Loss collision (God + board destroyed simultaneously): Victory prevails. Win/Loss GDD Rule 6 is the authority. Combat System GDD AC-18 and AC-22 updated to match.
 

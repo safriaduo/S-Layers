@@ -1,8 +1,8 @@
 # Character System
 
-> **Status**: Designed
+> **Status**: Needs Revision — propagation update from angel-system.md redesign (2026-05-27)
 > **Author**: Federico Gallucci + Claude Code agents
-> **Last Updated**: 2026-05-25
+> **Last Updated**: 2026-05-27
 > **Implements Pillar**: Agency Over Dice (primary); Cooperative Ownership (secondary); Combos Must Be Discoverable (supporting)
 > **CD-GDD-ALIGN**: APPROVE (2026-05-25) — three forward notes: (1) confirm Martyr routing is sometimes wrong in playtest; (2) verify SR-5 contract at Equipment/Item GDD review; (3) keep "held argument" framing fenced to Player Fantasy section only.
 
@@ -186,11 +186,12 @@ Neither exception breaks Rule 6. N is always the raw face of the die as it enter
 "Deals damage to all enemy layers" = **Penetrating** flag.
 
 - When the Accumulate 8 effect fires, the Penetrating flag is set on the **next** damage-dealing event from **any** player (this turn or the following turn).
-- A Penetrating damage event deals its full damage value to **all current layers** of the targeted Angel simultaneously.
-- A layer is stripped if the Penetrating hit meets or exceeds that layer's HP. Multiple layers may be stripped in one Penetrating hit.
+- A Penetrating damage event cascades **within the targeted slot only** — excess damage above the layer's HP carries to the next layer of the same slot (Head, Body, or Weapon). Strip checks fire sequentially within the slot, outermost first. HP_eff for each newly revealed layer is recalculated fresh before its check fires. On-destroy passives trigger outermost-first.
+- **Penetrating does not cross slot boundaries.** Excess stops at the slot boundary even if damage exceeds all remaining layers in that slot. The slot becomes Inert; damage does not carry to Head, Body, or Weapon neighbours.
 - The Penetrating flag is consumed after one damage event. It does not persist further.
+- *(Angel System Rule 6.6 governs full Penetrating cascade resolution. Character System Rule 11 sets the flag; Angel System owns the mechanics.)*
 
-> ⚠️ **Angel System cross-system flag**: Penetrating damage is a new damage type. The Angel System GDD must confirm: (a) whether passive "on destroy" effects from multiple stripped layers fire individually or simultaneously; (b) whether items riding the layer-strip event trigger once or once per stripped layer.
+> ✅ **RESOLVED 2026-05-27**: Penetrating is within-slot cascade only (Angel System GDD redesign). On-destroy passives fire individually in outermost-first order. Items with departure triggers on stripped layers fire separately and do not receive the Penetrating flag (Angel System edge case Rule 6.6).
 
 ---
 
@@ -339,20 +340,31 @@ The `T_reservoir` formula is defined as:
 
 **Key design signal:** The damage-per-turn-invested is **constant at 1.4 regardless of release timing**. Releasing early (R=8) or late (R=28) produces the same ratio. Holding is not more efficient — it is only more powerful when combined with the Penetrating flag.
 
-**Penetrating multiplier (conditional):**
-`D_penetrating = R × n_L`
+**Penetrating cascade (excess-carries, within-slot — Angel System Rule 6.6):**
 
-| R | n_L = 1 | n_L = 2 | n_L = 3 | n_L = 4 |
-|---|---------|---------|---------|---------|
-| 8 | 8 | 16 | 24 | 32 |
-| 14 | 14 | 28 | 42 | 56 |
-| 21 | 21 | 42 | 63 | 84 |
+The damage total R is applied to the Exposed layer first. If R ≥ HP_L1, L1 strips and the **excess (R − HP_L1) carries to L2**. If excess ≥ HP_L2, L2 strips and remaining carries to L3 (if any). Each newly revealed layer's HP_eff is recalculated fresh before its strip check. Partial excess that does not clear a layer is added to that layer's Slot Tracker Die; the tracker resets to 0 at end of phase (per AC-16).
 
-**Release timing rule:** Release is favorable when `R ≥ HP_L_remaining` (guarantees the Angel layer is stripped this turn). Holding past this point delays the strip at a cost of 1.4 damage-equivalent per turn held.
+This is **not** an AOE — R is applied once, cascading through layers. Total damage output = R (unchanged from a non-Penetrating release).
 
-**Example:** Encounter turn 3. Reservoir total ≈ 10. Head Accumulate total = 5. In 2 more turns: Reservoir grows to ~12.8; Head crosses 8 → Penetrating fires. Release at R=12.8 with Penetrating and n_L=2 = 25.6 damage across both layers. Immediate release = 10 damage to one layer. Hold is worth +15.6 damage. Hold.
+`n_strips(R) = max{ j : R ≥ Σᵢ₌₁ʲ HP_Lᵢ }`
 
-*DEFERRED: Penetrating multi-layer behavior (passive trigger stacking, item trigger count) requires Angel System GDD confirmation.*
+The formula `D_penetrating = R × n_L` (old, pre-2026-05-27 redesign) assumed an AOE model and **is no longer valid**. Retire it.
+
+**Cascade worked examples (n=2, 2-layer slot):**
+
+| R | HP_L1 / HP_L2 | L1 strips? | L2 strips? | Cascade result |
+|---|---|---|---|---|
+| 8 | 4 / 6 | ✓ (excess=4) | ✓ (4 ≥ 6? No) → survives | L1 only; L2 tracker = 4 |
+| 11 | 4 / 6 | ✓ (excess=7) | ✓ (7 ≥ 6) | **Both layers** — slot inerted |
+| 11 | 6 / 10 | ✓ (excess=5) | ✗ (5 < 10) | L1 only; L2 tracker = 5 |
+| 16 | 6 / 10 | ✓ (excess=10) | ✓ (10 ≥ 10) | **Both layers** — slot inerted |
+| 11 | 8 / 12 | ✓ (excess=3) | ✗ (3 < 12) | L1 only; L2 tracker = 3 |
+
+**Cooperative cascade bonus:** Partial excess deposited on L2's tracker does not strip L2 alone, but cooperating players' damage to the same slot in the same turn accumulates on top of it. The Martyr dealing 8 damage to Body on the same turn as a Pilgrim cascade leaving 5 on L2's tracker (HP=10): 5+8=13 ≥ 10 → L2 also strips. This is the intended Pilgrim+Martyr design coupling.
+
+**Release timing rule:** Release is favorable when `R ≥ HP_L_remaining` (guarantees the Angel layer is stripped this turn). For a two-layer strip in one event: hold until `R ≥ HP_L1 + HP_L2`.
+
+**Example:** Encounter turn 5. Reservoir total ≈ 7. Head Accumulate total = 6; will cross 8 in ~2 turns. Medium-protection slot in play (HP_L1=6, HP_L2=10). Hold: in 2 turns, R ≈ 9.8. Pen fires. Cascade: L1 strips (excess=3.8, not enough for L2=10). L2 tracker = 3.8. If Martyr also hits Body for 7 that turn: tracker = 10.8 ≥ 10 → L2 also strips. Party effectively clears the slot in one round via coordination. Solo release at R=9.8 only strips L1.
 
 ---
 
@@ -393,16 +405,24 @@ At [N≥4]×2 Weapon slot: `E[gain per reroll] ≈ 5.15` → `G_martyr = 10.3` (
 
 ### S_encounter Comparison (Base Equipment + Gift)
 
+> ✅ **OQ-05 RESOLVED (2026-05-27):** Penetrating is an excess-carries cascade within one slot (Angel System Rule 6.6). The old `D_penetrating = R × n_L` AOE formula is retired. S_encounter values below reflect the cascade model. Pilgrim's band viability at n=2 is intentionally item-dependent; items complete the arc. See Tuning Knob 6.
+
 | Character | S_encounter | vs. Band [54, 74] | Key variable |
 |---|---|---|---|
-| The Pilgrim (no Penetrating) | ~23 | **Below band** | Penetrating multiplier required |
-| The Pilgrim (1× Penetrating, n_L=3) | ~65 | **Within band ✓** | n_L at release time |
+| The Pilgrim (base, no items, n=2) | ~37–40 | **Below band** | Items required to reach band at n=2 |
+| The Pilgrim (1× Type 2 item on Reservoir, n=2) | ~54–58 | **At floor / in band ✓** | Items complete the arc |
+| The Pilgrim (n=3–4, R=18, full 2-layer cascade) | ~54–60 | **In band ✓** | Deeper slots allow full-slot Inert |
 | The Martyr (pre-Integrity-cost) | ~79.5 | **Above band** | Self-Integrity Weapon cost not yet netted |
 
+*S_encounter (Pilgrim base) ≈ 37–40 derivation: throughput component (Body + Gift) ≈ 23; B_burst = R ≈ 11–14 (Reservoir release, cascade does not change total damage output, only how many layers it clears).*
+
+*S_encounter (Pilgrim + 1 Type 2 item on Reservoir): E_item_encounter = p_c × k_bonus × T_active² ≈ 0.65 × 3 × 3² ≈ 17.6 → S_combined ≈ 37 + 17.6 ≈ 54.6. Confirms item arc is viable.*
+
 **Design flags:**
-1. 🚩 **Pilgrim is Penetrating-gated.** Without Penetrating, S_encounter ≈ 23. Structurally intentional, but encounter designers need a minimum Angel layer count guideline for Pilgrim encounters. Captured in Tuning Knobs.
+1. 🚩 **Pilgrim is item-dependent at n=2.** Base S ≈ 37–40. One Type 2 Output Amplification item on the Reservoir zone pushes into band. Encounter designers must not use Pilgrim for n=2 playtest sessions without at least one item in the pool. Captured in Tuning Knobs.
 2. 🚩 **Martyr above band until Integrity cost netted.** The Weapon's self-degradation IS the balancing mechanism — must be confirmed after Equipment Degradation GDD defines Weapon layer HP pool.
 3. ℹ️ **Reservoir efficiency is flat.** If the Penetrating synergy is ever cut, the Reservoir needs a redesigned holding incentive.
+4. ℹ️ **Cascade partial excess enables cooperative play.** At n=2, the Pilgrim's Penetrating cascade deposits partial excess on L2's tracker, which the Martyr's damage can complete in the same turn. This is the designed coupling — solo Pilgrim is below band; Pilgrim+Martyr party is in band.
 
 ---
 
@@ -473,7 +493,9 @@ At [N≥4]×2 Weapon slot: `E[gain per reroll] ≈ 5.15` → `G_martyr = 10.3` (
 
 **If the Penetrating flag is set and the Martyr's Weapon fires (external damage + self-Integrity-loss)**: Penetrating applies to the external Angel damage only. The self-Integrity-loss component does not receive or consume the Penetrating flag.
 
-**⚠️ Open ruling — Penetrating and multi-layer strip**: If Penetrating deals full damage to all Angel layers and multiple layers' HP thresholds are met, the number of simultaneous strips is unresolved. Conservative ruling until Angel System GDD confirms: Penetrating damage touches all layers for passive trigger checks, but physical strip events remain limited to at most one layer per turn by the no-cascade rule. **Confirm in Angel System GDD before Penetrating-capable characters go to production.**
+**If the Penetrating flag is set and the damage event strips a layer that has an attached item with a departure trigger**: the Penetrating flag is consumed by the die effect's damage — not by the item's departure trigger. The item departure trigger fires after the on-destroy passive of the stripped layer, and is treated as a separate non-Penetrating damage event. Penetrating does not propagate to item departure triggers.
+
+**Penetrating multi-layer strip — RESOLVED 2026-05-27 (within-slot cascade only)**: If Penetrating damage exceeds the HP_eff of successive layers in the **targeted slot**, those layers strip sequentially in the same phase, outermost first. Excess carries within the slot; the slot may be fully Inerted in a single Penetrating event. On-destroy passives fire outermost-first. HP_eff for each newly revealed layer within the slot is recalculated fresh before its check fires. Penetrating does **not** cross slot boundaries (Head/Body/Weapon remain independent). See Integrity System Rule 20 and Angel System Rule 6.6.
 
 ---
 
@@ -566,9 +588,14 @@ At [N≥4]×2 Weapon slot: `E[gain per reroll] ≈ 5.15` → `G_martyr = 10.3` (
 - **Too low (< 6 any layer)**: Martyr self-heals through most encounters; Body passive rarely threatened.
 - **Too high (> 14 any layer)**: Heal fires so rarely that the 4-layer Body is the sole defensive resource.
 
-**6. ⚠️ Pilgrim Encounter Viability — Minimum Angel Layer Count**
-- **Design constraint (not a tuning knob)**: Pilgrim S_encounter reaches band [54, 74] only when Penetrating fires against an Angel with ≥3 active layers. Against single-layer Angels, Pilgrim underperforms by ~30%.
-- **Required production guideline**: Encounters with the Pilgrim must pair them with Angels of ≥3 layers OR provide an alternative high-output path (items enhancing Reservoir independently of Penetrating). Flag at Events System and Angel System authoring stages.
+**6. ⚠️ Pilgrim Encounter Viability — Item Dependency at n=2**
+- **Design constraint (not a tuning knob)**: Pilgrim base S_encounter ≈ 37–40 at n=2 (below band [54, 74]). The Penetrating cascade (excess-carries, Angel Rule 6.6) has total damage output = R; it does not multiply R by layer count. Items complete the arc.
+- **Resolution (OQ-05, 2026-05-27)**: Pilgrim is intentionally item-dependent at n=2. One Type 2 Output Amplification item on the Reservoir zone provides ~17.6 encounter-level output (p_c=0.65, k_bonus=3, T_active=3), pushing S_combined to ~54–58 — at or above the [54,74] floor.
+- **Required production guidelines**:
+  1. Do not run n=2 Pilgrim playtests without ≥1 item in the available pool. Flag this in Game Setup and Events System authoring.
+  2. At n=3–4 (3-layer slots), Pilgrim reaches band (~54–60) at R=18 via cascade double-strip; items provide additional headroom.
+  3. Cooperative cascade coupling (Penetrating partial excess + Martyr damage to same slot) is the n=2 in-band mechanism. Ensure at least one n=2 encounter per session is designed for this sequence (Angel with medium-protection Body slot, Martyr adjacent).
+- **Playtest flag**: Measure Pilgrim S_encounter at first n=2 playtest. If R at Penetrating release is consistently < 8 (cascade provides nothing), the Reservoir feeding split (f_w) needs to increase from 40% → 50%.
 
 **7. Gift Activation Frequency (k_gift)**
 - **Target**: 1–2 activations per encounter for the "held weapon" fantasy. More than 3 activations degrades gift to routine action.
@@ -675,9 +702,9 @@ At [N≥4]×2 Weapon slot: `E[gain per reroll] ≈ 5.15` → `G_martyr = 10.3` (
 
 **CS-AC-28** *(BLOCKING)* — GIVEN The Pilgrim's Head Accumulate total reaches or exceeds 8 and the effect fires, WHEN the effect resolves, THEN the Penetrating flag is set; a visible table marker is placed to indicate the flag is active.
 
-**CS-AC-29** *(BLOCKING)* — GIVEN the Penetrating flag is active, WHEN the next damage-dealing event resolves (from any player, any zone, this turn or the following turn), THEN that damage event hits all current layers of the targeted Angel at the full damage value simultaneously.
+**CS-AC-29** *(BLOCKING)* — GIVEN the Penetrating flag is active, WHEN the next damage-dealing event resolves (from any player, any zone, this turn or the following turn), THEN that damage event cascades within the targeted slot: the full damage is applied to the Exposed layer; if it meets or exceeds HP_eff, the layer strips and excess carries to the next layer of the same slot. Penetrating does not cross slot boundaries. *(See Angel System Rule 6.6 for full cascade procedure.)*
 
-**CS-AC-30** *(DEFERRED — blocked on Angel System confirmation)* — GIVEN a Penetrating damage event resolves against an Angel with multiple active layers and the damage meets or exceeds multiple layers' HP thresholds, WHEN the strip events are evaluated, THEN the number of layers simultaneously stripped and whether each layer's on-destroy passive fires individually or simultaneously requires Angel System GDD ruling before this criterion can be finalized. Conservative interim ruling: physical strip events limited to at most one layer per turn by the no-cascade rule.
+**CS-AC-30** *(BLOCKING — RESOLVED 2026-05-27)* — GIVEN a Penetrating damage event resolves against an Angel, WHEN the cascade is evaluated, THEN: (a) damage cascades within the declared slot only — outermost layer strips first, excess carries to next layer of same slot; (b) each layer's on-destroy passive fires individually in outermost-first order; (c) HP_eff for each newly revealed layer is calculated fresh before its strip check; (d) Penetrating does not carry to other slot types (Head/Body/Weapon boundaries are hard stops). *Verified by:* Angel System ACs AC-16, AC-17, AC-18 cover the cascade scenarios.
 
 **CS-AC-31** *(BLOCKING)* — GIVEN the Penetrating flag is active and one damage event fires and resolves, WHEN that event completes, THEN the Penetrating flag is consumed and the table marker is removed; all subsequent damage events are normal.
 
@@ -719,7 +746,7 @@ At [N≥4]×2 Weapon slot: `E[gain per reroll] ≈ 5.15` → `G_martyr = 10.3` (
 
 | ID | Flag | Action Required |
 |---|---|---|
-| CS-AC-30 | Penetrating multi-strip: passive on-destroy firing order when multiple layers stripped simultaneously | BLOCKED — confirm in Angel System GDD before production |
+| CS-AC-30 | Penetrating multi-strip: cascade scope and on-destroy firing order | RESOLVED 2026-05-27 — Within-slot cascade only (Angel System redesign). Outermost layer strips first; on-destroy passives fire outermost-first; HP_eff recalculated fresh for each newly revealed layer within the slot. Penetrating does not cross slot boundaries. Angel System Rule 6.6 is authoritative. |
 | CS-AC-29 | Penetrating flag is not character-specific — confirm transfer to Martyr damage events | Verify in first table playtest with both characters |
 | CS-AC-38 | Inert-zone hit re-routing when Martyr Weapon self-strips | Confirm Integrity System routing rules handle the inert re-route case unambiguously |
 

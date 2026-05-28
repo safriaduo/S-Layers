@@ -1,8 +1,8 @@
 # Integrity System
 
-> **Status**: Designed (pending /design-review in fresh session)
+> **Status**: Needs Revision — propagation update from angel-system.md redesign (2026-05-27)
 > **Author**: Federico Gallucci + Claude Code agents
-> **Last Updated**: 2026-05-24
+> **Last Updated**: 2026-05-27
 > **Implements Pillar**: Fast and Focused (primary); The Build is Never Finished (secondary); Cooperative Ownership (supporting)
 > **Creative Director Review (CD-GDD-ALIGN)**: CONCERNS (accepted) 2026-05-24 — three LOW concerns resolved: routing authority clarified (rule 3), near-miss AC added (AC-25), tonal register copy note added to Player Fantasy.
 
@@ -56,15 +56,17 @@ The Angel works differently. Each of its layers is a wall with a number on it �
 
 #### Angel Integrity
 
-14. Each Angel has a stack of layers. Each layer has an explicit **HP value** printed on the card. HP is always public information for the currently exposed layer. HP values of layers not yet exposed are face-down and hidden until revealed.
-15. Players always deal damage to the currently **exposed top layer**. No layer targeting is permitted.
-16. **Damage tracking**: During the Effect Resolution Phase, the party places a spare die on the Angel board and advances it as each damage-dealing effect resolves. This die is the running damage total for the turn.
-17. After all player effects have resolved, the party announces the final total and compares it to the current layer's HP in a **single check**.
-18. If total ≥ HP: the layer is **stripped**. The next layer becomes the exposed layer. The damage tracker resets to zero.
-19. If total < HP: the layer **survives**. The damage total is discarded. No carryover. The tracker resets to zero.
-20. **No cascade**: A single turn's aggregated damage removes at most one Angel layer, regardless of magnitude. Excess damage above the threshold is discarded. The newly exposed layer's HP is unaffected.
-21. **Layer transition timing**: A layer is removed at the end of the Effect Resolution Phase, after all player effects have resolved. For the remainder of the current phase, all references to "the current Angel layer" refer to the layer active at the start of that phase.
-22. **Angel cleared**: When all Angel layers have been stripped, the Angel is cleared. This triggers the Win/Loss Conditions check.
+> **Angel System note (2026-05-27):** The Angel System GDD owns all per-slot Angel mechanics — the 3-column board structure (Head/Body/Weapon), per-slot Slot Tracker Dice, per-slot strip checks, HP calibration, and the multi-slot Cleared definition. Rules 14–22 below state the foundational principles; the Angel System GDD is the authoritative implementation reference.
+
+14. Each Angel has a board structured as three independent **slot columns** (Head, Body, Weapon), each containing a stack of layer cards. Each layer carries an explicit **HP value** and a trigger set. HP is always public for the currently Exposed layer; Hidden layers remain face-down until the layer above is stripped.
+15. Damage targets the **exposed top layer of a declared slot** (Head, Body, or Weapon). Players must declare the target Angel and slot before advancing any tracker. Damage to one slot never affects another slot's tracker. The Angel System GDD governs slot declaration rules.
+16. **Damage tracking**: Each active slot has its own **Slot Tracker Die**. As each damage-dealing effect resolves, the declared slot's tracker advances. Slot trackers are fully independent of each other. Full tracking rules (two-die overflow, reset timing) are governed by the Angel System GDD.
+17. After all player effects have resolved, each slot's tracker total is compared independently to its exposed layer's HP in a **single check per slot**. Strip checks for all slots resolve before any Win/Loss evaluation.
+18. If slot tracker total ≥ HP: that slot's layer is **stripped**. The next layer in that slot becomes the Exposed layer. The Slot Tracker Die resets to zero.
+19. If slot tracker total < HP: the layer **survives**. The damage total is discarded. No carryover. The Slot Tracker resets to zero.
+20. **No cascade (non-Penetrating)**: Outside of Penetrating events, each slot's accumulated damage removes at most one layer per turn. Excess above the threshold is discarded. **Exception — Penetrating (Character System Rule 11; Angel System Rule 6.6):** When the Penetrating flag is active, the damage event cascades **within the targeted slot only** — excess carries to the next layer of the same slot. Strip checks fire sequentially within that slot, outermost first; HP_eff for each newly revealed layer is recalculated fresh (HP_L + active BUFF for this turn) before its check fires. On-destroy passives trigger outermost-first. Penetrating damage does **not** cross slot boundaries — excess stops at the slot boundary even under Penetrating. This is the only exception to the no-cascade rule.
+21. **Layer transition timing**: A layer is removed at the end of the Effect Resolution Phase, after all player effects have resolved. For the remainder of the current phase, all references to "the current Angel layer for a slot" refer to the layer active at the start of that phase.
+22. **Angel cleared**: When all three slots of an Angel (Head, Body, and Weapon) are **Inert** — all layers in each slot have been stripped — the Angel is **Cleared**. This triggers the Win/Loss Conditions check. Stripping one slot's last layer does not clear the Angel; all three slots must be Inert.
 
 #### Hit Targeting Grammar
 
@@ -91,14 +93,27 @@ The Angel works differently. Each of its layers is a wall with a number on it �
 | Alive | ≥1 slot is Active |
 | Destroyed | All 3 slots are Inert → triggers Win/Loss check |
 
-**Angel Layer States**
+**Angel Slot States**
 
 | State | Condition |
 |---|---|
-| Exposed | Currently active layer; receives damage; HP visible |
-| Hidden | Layer beneath the Exposed layer; HP face-down; not targetable |
-| Stripped | HP threshold met; card removed; next Hidden layer becomes Exposed |
-| Cleared | All layers stripped → Angel defeated → triggers Win/Loss check |
+| Active | Slot has ≥ 1 remaining layer; Slot Tracker Die present |
+| Inert | All layers stripped; no actions fire from this slot; tracker removed |
+
+**Angel Layer States (within an Active slot)**
+
+| State | Condition |
+|---|---|
+| Exposed | Current top card of the slot column; HP and trigger set visible |
+| Hidden | In stack beneath Exposed; face-down; not targetable |
+| Stripped | Tracker met threshold; card removed; next Hidden becomes Exposed |
+
+**Angel Board State**
+
+| State | Condition |
+|---|---|
+| Active | ≥ 1 slot still Active |
+| Cleared | All three slots (Head, Body, Weapon) Inert → triggers Win/Loss check |
 
 ---
 
@@ -108,13 +123,13 @@ The Angel works differently. Each of its layers is a wall with a number on it �
 |---|---|---|
 | **Equipment Degradation** | Receives: "layer stripped" event (which slot, which player) | Degradation owns what happens when the new card is exposed — the reveal event and its consequences. Integrity triggers the event; it does not define the consequence. |
 | **Win/Loss Conditions** | Sends: "player board destroyed" trigger; "Angel cleared" trigger | Integrity defines the conditions. Win/Loss owns what game-end means. |
-| **Angel System** | Receives: hit count, hit type, and targeting constraints from Angel action text | Angel System owns each action's hit definition. Integrity System owns the routing rules applied to those hits. |
+| **Angel System** | Receives: hit count, hit type, and targeting constraints from Angel action text | Angel System owns each action's hit definition and all per-slot mechanics (slot trackers, HP calibration via WAS, multi-slot Cleared definition). Integrity System owns the routing rules applied to those hits. D_player_base and D_agg are consumed by Angel System as calibration anchors only. |
 | **Dice Economy** | Sends: Accumulate totals are wiped on layer strip (rule 7). The Dice Economy GDD defines Accumulate totals as a property of the card; this rule applies that principle to the layer-strip event. | Cross-system fact: both GDDs must agree that totals are lost on strip. |
 | **Item System** | Receives: restoration exception hook (rule 9). An item that restores a layer overrides the "inert is permanent" base rule. | Item System must print the exception explicitly on the card. |
 
 ## Formulas
 
-*These formulas are design tools for Angel System and Character System authors. None are computed at the table. All formulas derive from locked constants in the Dice Economy GDD.*
+*These formulas are design tools for Character System authors. None are computed at the table. Formula 4 (HP bounds for Angel layers) has been **superseded** by Angel System Formula 2 (WAS-based per-slot HP calibration) — see `angel-system.md`. D_player_base and D_agg remain as anchor constants consumed by the Angel System.*
 
 **Baseline constant (this GDD):**
 > **D_player_base = 8** — expected damage dealt by one player in one turn at honest play with basic equipment and items. Derived from 2D6 placed on damage slots with strategic routing (~3.5 per die × 2 dice = 7.0 base, +1 for expected item contribution). This is the calibration reference; actual in-session damage ranges 7–10 depending on build.
@@ -205,45 +220,9 @@ For design calibration, the relationship between HP_L and D_agg governs the band
 
 ---
 
-### Formula 4 — HP Bounds for Angel Layer Design
+### ~~Formula 4 — HP Bounds for Angel Layer Design~~ *(DEPRECATED 2026-05-27)*
 
-**Valid HP range constraint:**
-
-`HP_min = ⌈α × D_agg⌉     HP_max = ⌊β × D_agg⌋`
-
-where **α = 0.6** (trivial-floor coefficient) and **β = 1.2** (hard-ceiling coefficient).
-
-**Variables:**
-
-| Variable | Symbol | Type | Range | Description |
-|---|---|---|---|---|
-| Aggregate damage | D_agg | float | see Formula 1 | Expected party damage per turn at design's target party size |
-| Trivial-floor coefficient | α | float | 0.6 (locked) | Layers below this multiple of D_agg strip too reliably to create tension |
-| Hard-ceiling coefficient | β | float | 1.2 (locked) | Layers above this multiple may take 3+ turns — degenerate for encounter pacing |
-| Minimum valid HP | HP_min | int | 1–∞ | HP floor for a non-trivial layer |
-| Maximum valid HP | HP_max | int | 1–∞ | HP ceiling for a reliably strippable layer |
-
-**Output range (valid HP bands by party size):**
-
-| Party size | D_agg | HP_min (×0.6) | HP_max (×1.2) | Valid band |
-|---|---|---|---|---|
-| 1 player | 8 | 5 | 10 | [5, 10] |
-| 2 players (MVP) | 16 | 10 | 19 | [10, 19] |
-| 3 players | 24 | 15 | 29 | [15, 29] |
-| 4 players (full) | 32 | 20 | 38 | [20, 38] |
-
-**Design constraint:** Angel layers must be designed for a specific target party size. An Angel layer designed for 2-player play (HP ≤ 19) will be trivially easy at 4-player play (HP_min = 20). The Angel System GDD must state the target party size for each Angel.
-
-**Degenerate HP values — two failure modes:**
-
-- **Mode 1 — Trivially easy (HP_L < HP_min):** Strips on nearly every turn; no pacing tension. Reduce HP or redesign as an immediate effect.
-- **Mode 2 — Unreachable (HP_L > D_agg_max):** Layer can never be stripped. D_agg_max is a function of maximum character dice configurations — *[TBD: Character System GDD, max damage per turn]*.
-
-**Example:** MVP party (D_agg = 16), 3-layer Angel:
-- Layer 1 (outer): HP = 12 — easy first contact. T_angel ≈ 1.2 turns.
-- Layer 2 (middle): HP = 16 — standard tension. T_angel ≈ 1.5 turns.
-- Layer 3 (inner): HP = 18 — hard final wall. T_angel ≈ 2.5 turns.
-- Total expected turns: ≈ 5.2 turns. Within the 4–8 turn encounter target. ✓
+> **Removed.** Superseded by Angel System Formula 2 (WAS-based per-slot HP calibration). HP_alpha (0.6) and HP_beta (1.2) no longer apply. Angel slot HP ∈ [4, 14]; see `angel-system.md` Formula 2.
 
 ## Edge Cases
 
@@ -295,7 +274,7 @@ where **α = 0.6** (trivial-floor coefficient) and **β = 1.2** (hard-ceiling co
 
 **Angel Design Errors (Prevention Rules)**
 
-- **If an Angel card has HP_L = 0 on any layer**: this is an illegal card. Per HP bounds, HP_min ≥ 5 for any valid party size. Flag as a card-vetting error in the Angel System GDD. At the table, treat it as HP_L = HP_min for the party size.
+- **If an Angel card has HP_L = 0 on any layer**: this is an illegal card. Per Angel System bounds, HP_slot_Lk ∈ [4, 14]. Flag as a card-vetting error. At the table, treat it as HP_L = 4 (Angel System HP floor).
 
 - **If an Angel enters play with zero layers (malformed card, all layers missing)**: treat the Angel as immediately cleared. No encounter occurs. Advance to the next Event card. Award no victory progress. Log as a physical prototype defect.
 
@@ -308,8 +287,8 @@ where **α = 0.6** (trivial-floor coefficient) and **β = 1.2** (hard-ceiling co
 | System | Dependency Type | What They Consume |
 |---|---|---|
 | **Equipment Degradation** | Hard | The "layer stripped" event (trigger + which slot, which player). Degradation owns the reveal consequence; Integrity owns the trigger. |
-| **Win/Loss Conditions** | Hard | "Player board destroyed" trigger (all 3 slots inert) and "Angel cleared" trigger (all Angel layers stripped). Win/Loss owns what game-end means; Integrity defines the conditions. |
-| **Angel System** | Hard | Hit count, hit type (party/targeted), and targeting constraints produced by Angel action text. Angel System owns what each face does; Integrity owns the routing rules. Also consumes: HP bounds formula (HP_min, HP_max) and D_agg calibration baseline for Angel layer design. |
+| **Win/Loss Conditions** | Hard | "Player board destroyed" trigger (all 3 slots inert) and "Angel cleared" trigger (all 3 Angel slots Inert). Win/Loss owns what game-end means; Integrity defines the conditions. |
+| **Angel System** | Hard | Hit count, hit type (party/targeted), and targeting constraints produced by Angel action text. Angel System owns what each slot/face does and all per-slot HP calibration (WAS-based Formula 2); Integrity owns the routing rules applied to those hits. D_player_base and D_agg are consumed by Angel System as calibration anchors; HP bounds formula (HP_min/HP_max) no longer governs Angel slot HP. |
 | **Character System** | Hard | Layer count per slot (L_total per player) — defined on the character board. Integrity System specifies that layer counts are per-character; Character System sets the actual values. Also consumes: T_board formula to verify board survivability. |
 | **Item System** | Soft | Restoration effect hook (rule 9) — an item may restore a stripped layer if its card text explicitly says so. Item System must use the face-down discard pile model defined here. |
 | **Combat System** | Hard | The full integrity resolution sequence (hit routing in Angel Resolution Phase, damage check in Effect Resolution Phase) is part of the turn flow that Combat System orchestrates. Combat owns the phase sequence; Integrity owns the rules within each phase. |
@@ -317,7 +296,7 @@ where **α = 0.6** (trivial-floor coefficient) and **β = 1.2** (hard-ceiling co
 **Bidirectional consistency notes**:
 - When the **Equipment Degradation GDD** is authored, it must list the Integrity System as a dependency and reference the "layer stripped" event as its trigger.
 - When the **Win/Loss Conditions GDD** is authored, it must reference "player board destroyed" and "Angel cleared" as defined here.
-- When the **Angel System GDD** is authored, it must list the Integrity System as a dependency and use the HP bounds formula when designing Angel layer HP values.
+- The **Angel System GDD** lists Integrity System as a dependency for D_player_base, D_agg, and hit type definitions. Angel slot HP is calibrated by Angel System's own WAS-based Formula 2 — not by the HP bounds formula in this GDD. *(2026-05-27 update: HP bounds formula superseded.)*
 - When the **Character System GDD** is authored, it must list the Integrity System as a dependency and verify T_board for each character at both average and worst-case routing.
 
 ## Tuning Knobs
@@ -329,19 +308,9 @@ where **α = 0.6** (trivial-floor coefficient) and **β = 1.2** (hard-ceiling co
 - **Impact**: Every Angel HP value in the Angel System GDD must be re-derived if this assumption shifts. This is the highest-leverage knob in the system.
 - **Note**: D_player_base is an authoring-time design constant. It is not tracked at the table.
 
-**2. HP Trivial-Floor Coefficient (α = 0.6)**
-- **Adjusts**: The minimum HP that produces meaningful tension in an Angel layer
-- **Safe range**: 0.5–0.7
-- **Too low (< 0.5)**: Very easy layers permitted; encounter pacing becomes flat
-- **Too high (> 0.7)**: No "warm-up" layers possible; every layer is difficult from the start
-- **Interaction**: Works with β (knob 3) to define the total valid HP band width
+**~~2. HP Trivial-Floor Coefficient (α = 0.6)~~** *(SUPERSEDED 2026-05-27 — Angel System now owns HP calibration via WAS-based Formula 2. HP_alpha does not apply to Angel slot HP. Players have no HP. Remove from design tooling.)*
 
-**3. HP Hard-Ceiling Coefficient (β = 1.2)**
-- **Adjusts**: The maximum HP before a layer becomes a multi-turn grind
-- **Safe range**: 1.0–1.5
-- **At 1.0**: Only layers at exactly D_agg are "hard"; no range above D_agg permitted
-- **At 1.5**: Layers may require 3+ turns to strip; risk of violating the 5–8 minute encounter target
-- **Current value (1.2)**: Hard layers take up to ~2.5–3 turns. Tight enough to stay within the encounter window.
+**~~3. HP Hard-Ceiling Coefficient (β = 1.2)~~** *(SUPERSEDED 2026-05-27 — same reason as above. HP_beta does not apply to Angel slot HP. Angel slot HP is calibrated by protection level relative to WAS_inner — see Angel System Tuning Knobs 1–3.)*
 
 **4. Player Layer Count per Slot (L_total — owned by Character System)**
 - **Adjusts**: How long a player board survives under hit pressure; how often the reveal drama occurs
